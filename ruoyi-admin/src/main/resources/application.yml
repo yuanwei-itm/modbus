@@ -68,13 +68,13 @@ spring:
   # redis 配置
   redis:
     # 地址
-    host: localhost
+    host: 127.0.0.1
     # 端口，默认为6379
     port: 6379
     # 数据库索引
     database: 0
     # 密码
-    password:
+    password: 123456
     # 连接超时时间
     timeout: 10s
     lettuce:
@@ -87,6 +87,22 @@ spring:
         max-active: 8
         # #连接池最大阻塞等待时间（使用负值表示没有限制）
         max-wait: -1ms
+
+# 串口+Modbus RTU配置（新增）
+serial-modbus:
+  port-name: COM3        # Windows串口（Linux填/dev/ttyUSB0）
+  baud-rate: 9600        # 波特率（和Modbus Slave一致）
+  data-bits: 8           # 数据位
+  stop-bits: 1           # 停止位
+  parity: NONE           # 校验位（NONE/ODD/EVEN）
+  slave-id: 1            # Modbus从站ID
+  timeout: 3000          # 通信超时（ms）
+  register:
+    type: holding        # 寄存器类型：holding(4xxxx)/input(3xxxx)
+    start-address: 0     # 起始地址（40001=0，40002=1）
+    quantity: 2          # 读取寄存器数量
+
+
 
 # token配置
 token:
