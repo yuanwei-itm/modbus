@@ -1,0 +1,21 @@
+package com.ruoyi.system.domain;
+
+import lombok.Data;
+import java.util.Date;
+
+/**
+ * 温湿度数据实体（纯MyBatis，无MyBatis-Plus注解）
+ */
+@Data
+public class ModbusData {
+    /** 主键ID（自增） */
+    private Long id;
+    /** Modbus从站ID（设备ID） */
+    private Integer slaveId;
+    /** 温度（℃） */
+    private Double temperature;
+    /** 湿度（%RH） */
+    private Double humidity;
+    /** 采集时间 */
+    private Date readTime;
+}
