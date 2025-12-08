@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ruoyi.system.mapper.ModbusDataMapper">
+    <!-- 结果集映射：数据库下划线→实体驼峰 -->
+    <resultMap id="ModbusDataResultMap" type="com.ruoyi.system.domain.ModbusData">
+        <id column="id" property="id"/>
+        <result column="slave_id" property="slaveId"/>
+        <result column="temperature" property="temperature"/>
+        <result column="humidity" property="humidity"/>
+        <result column="read_time" property="readTime"/>
+    </resultMap>
+
+    <!-- 批量插入温湿度数据 -->
+    <insert id="batchInsertModbusData" parameterType="java.util.List">
+        INSERT INTO modbus_data (slave_id, temperature, humidity, read_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.slaveId}, #{item.temperature}, #{item.humidity}, #{item.readTime})
+        </foreach>
+    </insert>
+
+    <!-- 按时间范围查询历史数据 -->
+    <select id="selectHistoryDataByTimeRange" resultMap="ModbusDataResultMap">
+        SELECT id, slave_id, temperature, humidity, read_time
+        FROM modbus_data
+        <where>
+            <if test="startTime != null">read_time &gt;= #{startTime}</if>
+            <if test="endTime != null">AND read_time &lt;= #{endTime}</if>
+        </where>
+        ORDER BY read_time DESC
+    </select>
+</mapper>
