@@ -21,4 +21,6 @@ public interface ModbusDataMapper {
             @Param("startTime") Date startTime,
             @Param("endTime") Date endTime
     );
+
+    ModbusData selectLatestData();
 }
