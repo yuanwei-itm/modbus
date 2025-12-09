@@ -32,14 +32,15 @@ public class HistoryDataController extends BaseController {
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String startTime,
-            @RequestParam(required = false) String endTime
+            @RequestParam(required = false) String endTime,
+            @RequestParam(required = false) Integer slaveId // 新增：设备ID参数
     ) throws ParseException {
         // 解析时间参数（逻辑不变）
         Date start = (startTime == null || startTime.trim().isEmpty()) ? null : SDF.parse(startTime);
         Date end = (endTime == null || endTime.trim().isEmpty()) ? null : SDF.parse(endTime);
 
         // 调用Service查询：返回类型从 Map 改为 PageResultVO
-        PageResultVO result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end);
+        PageResultVO result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
         return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
     }
 
