@@ -31,4 +31,11 @@
         </where>
         ORDER BY read_time DESC
     </select>
+    <!--查询最新一条数据 -->
+    <select id="selectLatestData" resultMap="ModbusDataResultMap">
+        SELECT id, slave_id, temperature, humidity, read_time
+        FROM modbus_data
+        ORDER BY read_time DESC  -- 按时间倒序
+            LIMIT 1                  -- 只取第一条（最新的）
+    </select>
 </mapper>
