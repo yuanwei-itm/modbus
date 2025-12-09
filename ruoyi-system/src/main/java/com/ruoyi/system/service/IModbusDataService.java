@@ -21,4 +21,6 @@ public interface IModbusDataService {
             Date startTime,
             Date endTime
     );
+
+    ModbusData getLatestData();
 }
