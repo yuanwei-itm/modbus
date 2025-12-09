@@ -2,6 +2,7 @@ package com.ruoyi.system.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.service.IModbusDataService;
 import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入分页VO类
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,9 +49,12 @@ public class HistoryDataController extends BaseController {
      */
     @GetMapping("/realtime")
     public AjaxResult getRealtimeData() {
-        // 若已实现Service的getLatestData方法，可补充为：
-        // ModbusData latestData = modbusDataService.getLatestData();
-        // return AjaxResult.success(latestData);
-        return AjaxResult.success("实时数据接口待补充（基于selectLatestData实现）");
+        ModbusData latestData = modbusDataService.getLatestData();
+        if (latestData != null) {
+            return AjaxResult.success("获取实时数据成功", latestData);
+        } else {
+            return AjaxResult.success("暂无实时数据", null);  // 无数据时返回友好提示
+        }
     }
+
 }
