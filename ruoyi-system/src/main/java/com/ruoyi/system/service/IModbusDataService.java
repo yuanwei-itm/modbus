@@ -19,8 +19,11 @@ public interface IModbusDataService {
             Integer pageNum,
             Integer pageSize,
             Date startTime,
-            Date endTime
+            Date endTime,
+            Integer slaveId // 新增：设备ID参数
     );
 
     ModbusData getLatestData();
+
+    int insertModbusData(ModbusData modbusData);
 }
