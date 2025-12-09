@@ -122,6 +122,11 @@ mybatis:
   # 加载全局的配置文件
   configLocation: classpath:mybatis/mybatis-config.xml
 
+  log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印SQL到控制台
+  logging:
+    level:
+      com.ruoyi.system.mapper: DEBUG  # 将你的 Mapper 包路径设置为 DEBUG
+
 # PageHelper分页插件
 pagehelper:
   helperDialect: mysql

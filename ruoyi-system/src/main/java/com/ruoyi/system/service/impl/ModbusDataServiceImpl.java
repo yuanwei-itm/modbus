@@ -5,15 +5,14 @@ import com.github.pagehelper.PageInfo;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.mapper.ModbusDataMapper;
 import com.ruoyi.system.service.IModbusDataService;
+import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入分页VO
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -32,6 +31,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean batchInsertModbusData(List<ModbusData> dataList) {
+        // 原有逻辑不变...
         if (dataList == null || dataList.isEmpty()) {
             log.warn("插入数据为空，无需操作");
             return false;
@@ -48,19 +48,20 @@ public class ModbusDataServiceImpl implements IModbusDataService {
 
     /**
      * 分页查询历史数据（PageHelper）
+     * 关键修改：返回类型从 Map 改为 PageResultVO，结果封装适配VO
      */
     @Override
-    public Map<String, Object> queryHistoryData(
-            Integer pageNum,
-            Integer pageSize,
-            Date startTime,
-            Date endTime
+    public PageResultVO queryHistoryData(  // 返回类型修改为 PageResultVO
+                                           Integer pageNum,
+                                           Integer pageSize,
+                                           Date startTime,
+                                           Date endTime
     ) {
-        // 参数校验
+        // 1. 参数校验（原有逻辑不变）
         if (pageNum == null || pageNum < 1) pageNum = 1;
         if (pageSize == null || pageSize < 1) pageSize = 10;
 
-        // 时间范围限制（最多30天）
+        // 2. 时间范围限制（原有逻辑不变）
         if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
             if (startTime.after(endTime)) {
                 throw new IllegalArgumentException("开始时间不能晚于结束时间");
@@ -71,18 +72,17 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             }
         }
 
-        // PageHelper分页（纯MyBatis核心）
+        // 3. PageHelper分页查询（原有逻辑不变）
         PageHelper.startPage(pageNum, pageSize);
         List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime);
         PageInfo<ModbusData> pageInfo = new PageInfo<>(dataList);
 
-        // 封装分页结果
-        Map<String, Object> result = new HashMap<>();
-        result.put("total", pageInfo.getTotal());    // 总条数
-        result.put("rows", pageInfo.getList());      // 当前页数据
-        result.put("pages", pageInfo.getPages());    // 总页数
-        result.put("current", pageNum);              // 当前页
-        result.put("size", pageSize);                // 每页条数
-        return result;
+        // 4. 封装结果为 PageResultVO（核心修改：替换Map为VO）
+        return new PageResultVO(
+                pageNum,                // pagenum（当前页码）
+                pageSize,               // pagesize（每页条数）
+                pageInfo.getTotal(),    // total（总条数）
+                pageInfo.getList()      // list（数据列表）
+        );
     }
 }

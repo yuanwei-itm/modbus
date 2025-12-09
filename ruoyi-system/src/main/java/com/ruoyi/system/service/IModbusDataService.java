@@ -1,13 +1,10 @@
 package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.ModbusData;
+import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入VO类
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
-/**
- * 温湿度数据Service（纯MyBatis，无MyBatis-Plus）
- */
 public interface IModbusDataService {
     /**
      * 批量插入温湿度数据
@@ -16,8 +13,9 @@ public interface IModbusDataService {
 
     /**
      * 分页查询历史数据（PageHelper）
+     * 注意：返回类型从 Map<String, Object> 改为 PageResultVO
      */
-    Map<String, Object> queryHistoryData(
+    PageResultVO queryHistoryData(
             Integer pageNum,
             Integer pageSize,
             Date startTime,

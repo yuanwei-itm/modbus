@@ -3,6 +3,7 @@ package com.ruoyi.system.controller;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.system.service.IModbusDataService;
+import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入分页VO类
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,11 +12,8 @@ import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 
-/**
- * 温湿度历史数据接口（纯MyBatis+PageHelper）
- */
+
 @RestController
 @RequestMapping("/api/history-data")
 public class HistoryDataController extends BaseController {
@@ -35,13 +33,13 @@ public class HistoryDataController extends BaseController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime
     ) throws ParseException {
-        // 解析时间参数
+        // 解析时间参数（逻辑不变）
         Date start = (startTime == null || startTime.trim().isEmpty()) ? null : SDF.parse(startTime);
         Date end = (endTime == null || endTime.trim().isEmpty()) ? null : SDF.parse(endTime);
 
-        // 调用Service查询
-        Map<String, Object> result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end);
-        return AjaxResult.success(result);
+        // 调用Service查询：返回类型从 Map 改为 PageResultVO
+        PageResultVO result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end);
+        return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
     }
 
     /**
@@ -50,8 +48,9 @@ public class HistoryDataController extends BaseController {
      */
     @GetMapping("/realtime")
     public AjaxResult getRealtimeData() {
-        // 查询最新一条数据（需在Mapper/Service新增方法）
-        // 此处简化：实际需补充Mapper的selectLatestData方法
+        // 若已实现Service的getLatestData方法，可补充为：
+        // ModbusData latestData = modbusDataService.getLatestData();
+        // return AjaxResult.success(latestData);
         return AjaxResult.success("实时数据接口待补充（基于selectLatestData实现）");
     }
 }
