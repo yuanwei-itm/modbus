@@ -12,9 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Modbus温湿度采集定时任务（纯MyBatis，无MyBatis-Plus）
- */
 @Component
 public class SerialModbusTask {
     private static final Logger log = LoggerFactory.getLogger(SerialModbusTask.class);
