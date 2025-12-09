@@ -19,8 +19,11 @@ public interface ModbusDataMapper {
      */
     List<ModbusData> selectHistoryDataByTimeRange(
             @Param("startTime") Date startTime,
-            @Param("endTime") Date endTime
+            @Param("endTime") Date endTime,
+            @Param("slaveId") Integer slaveId // 新增：按设备ID筛选
     );
 
     ModbusData selectLatestData();
+
+    int insert(ModbusData modbusData);
 }
