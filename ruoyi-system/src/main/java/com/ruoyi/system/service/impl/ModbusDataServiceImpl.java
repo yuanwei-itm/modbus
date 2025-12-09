@@ -65,6 +65,36 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         return success;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int insertModbusData(ModbusData modbusData) {
+        if (modbusData == null) {
+            log.warn("单条插入数据为空，跳过操作");
+            return 0;
+        }
+
+        // 1. 调用Mapper插入单条数据
+        int insertCount = modbusDataMapper.insert(modbusData);
+        log.info("单条插入数据（slaveId={}）：{}", modbusData.getSlaveId(), insertCount > 0 ? "成功" : "失败");
+
+        // 2. 插入成功后，更新Redis缓存（与批量插入逻辑一致，缓存最新数据）
+        if (insertCount > 0) {
+            try {
+                redisTemplate.opsForValue().set(
+                        RedisKeyConstants.MODBUS_REALTIME_LATEST,
+                        JSON.toJSONString(modbusData),
+                        1, TimeUnit.HOURS
+                );
+                log.info("单条数据已缓存到Redis，slaveId={}, 时间={}",
+                        modbusData.getSlaveId(), modbusData.getReadTime());
+            } catch (Exception e) {
+                log.error("单条数据Redis缓存失败", e);
+                // 缓存失败不影响入库主流程，仅记录日志
+            }
+        }
+
+        return insertCount;
+    }
     /**
      * 查询最新一条数据（优先从Redis获取，失败则查库）
      */
@@ -111,7 +141,8 @@ public class ModbusDataServiceImpl implements IModbusDataService {
                                            Integer pageNum,
                                            Integer pageSize,
                                            Date startTime,
-                                           Date endTime
+                                           Date endTime,
+                                           Integer slaveId // 新增参数
     ) {
         // 1. 参数校验（原有逻辑不变）
         if (pageNum == null || pageNum < 1) pageNum = 1;
@@ -130,7 +161,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
 
         // 3. PageHelper分页查询（原有逻辑不变）
         PageHelper.startPage(pageNum, pageSize);
-        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime);
+        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime,slaveId);
         PageInfo<ModbusData> pageInfo = new PageInfo<>(dataList);
 
         // 4. 封装结果为 PageResultVO（核心修改：替换Map为VO）
