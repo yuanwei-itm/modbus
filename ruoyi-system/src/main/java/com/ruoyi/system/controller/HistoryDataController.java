@@ -43,18 +43,4 @@ public class HistoryDataController extends BaseController {
         return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
     }
 
-    /**
-     * 实时数据接口（获取最新一条温湿度）
-     * 示例：/api/history-data/realtime
-     */
-    @GetMapping("/realtime")
-    public AjaxResult getRealtimeData() {
-        ModbusData latestData = modbusDataService.getLatestData();
-        if (latestData != null) {
-            return AjaxResult.success("获取实时数据成功", latestData);
-        } else {
-            return AjaxResult.success("暂无实时数据", null);  // 无数据时返回友好提示
-        }
-    }
-
 }
