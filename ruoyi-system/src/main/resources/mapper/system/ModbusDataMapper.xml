@@ -22,6 +22,11 @@
         </foreach>
     </insert>
 
+    <insert id="insert" parameterType="com.ruoyi.system.domain.ModbusData">
+        INSERT INTO modbus_data (slave_id, temperature, humidity, read_time)
+        VALUES (#{slaveId}, #{temperature}, #{humidity}, #{readTime})
+    </insert>
+
     <!-- 按时间范围查询历史数据 -->
     <select id="selectHistoryDataByTimeRange" resultMap="ModbusDataResultMap">
         SELECT id, slave_id, temperature, humidity, read_time
@@ -29,6 +34,8 @@
         <where>
             <if test="startTime != null">read_time &gt;= #{startTime}</if>
             <if test="endTime != null">AND read_time &lt;= #{endTime}</if>
+        <!--新增slaveID查询！-->
+            <if test="slaveId != null">and slave_id = #{slaveId}</if>
         </where>
         ORDER BY read_time DESC
     </select>
