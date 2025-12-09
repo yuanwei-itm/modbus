@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 命名空间必须和Mapper接口全路径一致 -->
+<mapper namespace="com.ruoyi.system.mapper.DeviceArchiveMapper">
+
+    <!-- 查询所有启用的设备（对应你的表数据） -->
+    <select id="selectEnabledDevices" resultType="com.ruoyi.system.domain.DeviceArchive">
+        SELECT
+            device_id     AS deviceId,
+            device_name   AS deviceName,
+            comm_address  AS commAddress,
+            slave_id      AS slaveId,
+            status,
+            reg_count     AS regCount
+        FROM
+            device_archive
+        WHERE
+            status = '0'
+        ORDER BY
+            slave_id ASC
+    </select>
+
+</mapper>
