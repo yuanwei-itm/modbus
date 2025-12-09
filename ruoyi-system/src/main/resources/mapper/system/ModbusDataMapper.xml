@@ -13,7 +13,8 @@
     </resultMap>
 
     <!-- 批量插入温湿度数据 -->
-    <insert id="batchInsertModbusData" parameterType="java.util.List">
+    <insert id="batchInsertModbusData" parameterType="java.util.List"
+            useGeneratedKeys="true" keyProperty="id">  <!-- 新增这行，开启主键回填 -->
         INSERT INTO modbus_data (slave_id, temperature, humidity, read_time)
         VALUES
         <foreach collection="list" item="item" separator=",">
@@ -38,4 +39,5 @@
         ORDER BY read_time DESC  -- 按时间倒序
             LIMIT 1                  -- 只取第一条（最新的）
     </select>
+
 </mapper>
