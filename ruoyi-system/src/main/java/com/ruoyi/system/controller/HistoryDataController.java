@@ -13,6 +13,8 @@ import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -40,8 +42,16 @@ public class HistoryDataController extends BaseController {
         Date end = (endTime == null || endTime.trim().isEmpty()) ? null : SDF.parse(endTime);
 
         //调用ruoyi自带的pageinfo进行结果的分页
-        PageInfo<ModbusData> result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
-        return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
+        PageInfo<ModbusData> pageInfo = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
+        Map<String, Object> data = new HashMap<>();
+        data.put("pagenum", pageNum);
+        data.put("pagesize", pageSize);
+        data.put("list", pageInfo.getList());
+        data.put("total", pageInfo.getTotal());
+
+        // 用AjaxResult.success(data)返回，自动将data作为data属性的值
+        return AjaxResult.success(data);
+
     }
 
 }
