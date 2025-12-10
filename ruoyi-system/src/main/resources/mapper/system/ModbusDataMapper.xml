@@ -12,16 +12,6 @@
         <result column="read_time" property="readTime"/>
     </resultMap>
 
-    <!-- 批量插入温湿度数据 -->
-    <insert id="batchInsertModbusData" parameterType="java.util.List"
-            useGeneratedKeys="true" keyProperty="id">  <!-- 新增这行，开启主键回填 -->
-        INSERT INTO modbus_data (slave_id, temperature, humidity, read_time)
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (#{item.slaveId}, #{item.temperature}, #{item.humidity}, #{item.readTime})
-        </foreach>
-    </insert>
-
     <insert id="insert" parameterType="com.ruoyi.system.domain.ModbusData">
         INSERT INTO modbus_data (slave_id, temperature, humidity, read_time)
         VALUES (#{slaveId}, #{temperature}, #{humidity}, #{readTime})
@@ -37,14 +27,21 @@
         <!--新增slaveID查询！-->
             <if test="slaveId != null">and slave_id = #{slaveId}</if>
         </where>
-        ORDER BY read_time DESC
+        <!--新增slaveid排序，确保返回数据有序-->
+        ORDER BY read_time DESC, slave_id ASC
     </select>
-    <!--查询最新一条数据 -->
-    <select id="selectLatestData" resultMap="ModbusDataResultMap">
-        SELECT id, slave_id, temperature, humidity, read_time
-        FROM modbus_data
-        ORDER BY read_time DESC  -- 按时间倒序
-            LIMIT 1                  -- 只取第一条（最新的）
+
+    <!--查询所有设备的最新数据 -->
+    <select id="selectLatestDataByAllSlaveIds" resultMap="ModbusDataResultMap">
+        SELECT t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time
+        FROM modbus_data t1
+                 INNER JOIN (
+            -- 子查询：获取每个设备的最新采集时间
+            SELECT slave_id, MAX(read_time) AS max_time
+            FROM modbus_data
+            GROUP BY slave_id
+        ) t2 ON t1.slave_id = t2.slave_id AND t1.read_time = t2.max_time
+        ORDER BY t1.slave_id ASC;  -- 按设备ID排序
     </select>
 
 </mapper>

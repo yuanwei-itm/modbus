@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 // 实时数据专属Controller
 @RestController
@@ -20,7 +21,7 @@ public class RealTimeDataController {
     // 实时数据查询接口（从原来的HistoryDataController移过来）
     @GetMapping("/realtime")
     public AjaxResult getRealTimeData() {
-        ModbusData realTimeData = modbusDataService.getLatestData();
+        List<ModbusData> realTimeData = modbusDataService.getLatestDataByAllSlaveIds();
         return AjaxResult.success("获取实时数据成功", realTimeData);
     }
 
