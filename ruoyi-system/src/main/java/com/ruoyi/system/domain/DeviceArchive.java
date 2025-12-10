@@ -24,8 +24,5 @@ public class DeviceArchive {
 
     // 对应表中reg_count（寄存器数量，固定2）
     private Integer regCount;
-    public String getDeviceName() { return deviceName; }
-    public Integer getSlaveId() { return slaveId; }
-    public Integer getCommAddress() { return commAddress; }
-    public Integer getRegCount() { return regCount; }
+
 }
