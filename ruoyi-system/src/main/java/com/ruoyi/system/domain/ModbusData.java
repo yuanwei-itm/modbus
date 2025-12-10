@@ -10,6 +10,8 @@ import java.util.Date;
 public class ModbusData {
     /** 主键ID（自增） */
     private Long id;
+    /** 设备名称 */
+    private String deviceName;
     /** Modbus从站ID（设备ID） */
     private String slaveId;
     /** 温度（℃） */

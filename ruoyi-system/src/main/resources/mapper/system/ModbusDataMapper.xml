@@ -10,6 +10,7 @@
         <result column="temperature" property="temperature"/>
         <result column="humidity" property="humidity"/>
         <result column="read_time" property="readTime"/>
+        <result column="device_name" property="deviceName"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.ruoyi.system.domain.ModbusData">
@@ -17,31 +18,37 @@
         VALUES (#{slaveId}, #{temperature}, #{humidity}, #{readTime})
     </insert>
 
-    <!-- 按时间范围查询历史数据 -->
+    <!-- 按时间范围查询历史数据，联表查设备名称 -->
     <select id="selectHistoryDataByTimeRange" resultMap="ModbusDataResultMap">
-        SELECT id, slave_id, temperature, humidity, read_time
-        FROM modbus_data
+        SELECT
+        t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
+        COALESCE(t2.device_name, '未知设备') AS device_name
+        FROM modbus_data t1
+        LEFT JOIN device_archive t2 ON t1.slave_id = t2.slave_id AND t2.status = 0
         <where>
-            <if test="startTime != null">read_time &gt;= #{startTime}</if>
-            <if test="endTime != null">AND read_time &lt;= #{endTime}</if>
-        <!--新增slaveID查询！-->
-            <if test="slaveId != null">and slave_id = #{slaveId}</if>
+            <if test="startTime != null">t1.read_time &gt;= #{startTime}</if>
+            <if test="endTime != null">AND t1.read_time &lt;= #{endTime}</if>
+            <if test="slaveId != null">AND t1.slave_id = #{slaveId}</if>
         </where>
-        <!--新增slaveid排序，确保返回数据有序-->
-        ORDER BY read_time DESC, slave_id ASC
+        ORDER BY t1.read_time DESC, t1.id DESC
     </select>
 
-    <!--查询所有设备的最新数据 -->
+    <!-- 实时数据查询SQL -->
     <select id="selectLatestDataByAllSlaveIds" resultMap="ModbusDataResultMap">
-        SELECT t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time
+        SELECT
+            t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
+            -- 左联设备档案表，用COALESCE兜底“未知设备”
+            COALESCE(t2.device_name, '未知设备') AS device_name
         FROM modbus_data t1
                  INNER JOIN (
-            -- 子查询：获取每个设备的最新采集时间
             SELECT slave_id, MAX(read_time) AS max_time
             FROM modbus_data
             GROUP BY slave_id
-        ) t2 ON t1.slave_id = t2.slave_id AND t1.read_time = t2.max_time
-        ORDER BY t1.slave_id ASC;  -- 按设备ID排序
+        ) t3 ON t1.slave_id = t3.slave_id AND t1.read_time = t3.max_time
+            -- 新增：左联device_archive表，匹配设备名称（status=0对应表中实际状态）
+                 LEFT JOIN device_archive t2
+                           ON t1.slave_id = t2.slave_id
+                               AND t2.status = 0
+        ORDER BY t1.slave_id ASC;
     </select>
-
 </mapper>

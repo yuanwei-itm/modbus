@@ -25,5 +25,4 @@ public class RealTimeDataController {
         return AjaxResult.success("获取实时数据成功", realTimeData);
     }
 
-    // 后续如果有其他实时数据接口（比如最近N条），也可以放在这个类里
 }

@@ -43,6 +43,8 @@ public class HistoryDataController extends BaseController {
 
         //调用ruoyi自带的pageinfo进行结果的分页
         PageInfo<ModbusData> pageInfo = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
+
+        //封装分页参数，满足接口定义
         Map<String, Object> data = new HashMap<>();
         data.put("pagenum", pageNum);
         data.put("pagesize", pageSize);
