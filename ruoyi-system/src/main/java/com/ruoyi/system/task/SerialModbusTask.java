@@ -43,7 +43,7 @@ public class SerialModbusTask {
     private RedisTemplate<String, String> redisTemplate;
 
     // 每5秒采集一次
-    @Scheduled(cron = "0/5 * * * * ?")
+    @Scheduled(cron = "0/10 * * * * ?")
     public void collectModbusData() {
         log.info("===== 开始采集温湿度数据 =====");
 
@@ -66,6 +66,7 @@ public class SerialModbusTask {
                         deviceName, slaveId, regStart, regStart + regCount - 1);
 
                 // 核心：调用工具类读取数据（需传入当前设备的参数，下面会修改工具类支持）
+
                 int[] regValues = serialModbusUtils.readModbusSlaveData(slaveId, regStart, regCount);
 
                 // 解析数据（寄存器值转温湿度）

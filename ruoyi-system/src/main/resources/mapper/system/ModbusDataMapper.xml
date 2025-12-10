@@ -30,25 +30,35 @@
             <if test="endTime != null">AND t1.read_time &lt;= #{endTime}</if>
             <if test="slaveId != null">AND t1.slave_id = #{slaveId}</if>
         </where>
-        ORDER BY t1.read_time DESC, t1.id DESC
+        ORDER BY  t1.read_time DESC,t2.device_name ASC
     </select>
 
     <!-- 实时数据查询SQL -->
     <select id="selectLatestDataByAllSlaveIds" resultMap="ModbusDataResultMap">
         SELECT
             t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
-            -- 左联设备档案表，用COALESCE兜底“未知设备”
             COALESCE(t2.device_name, '未知设备') AS device_name
         FROM modbus_data t1
-                 INNER JOIN (
-            SELECT slave_id, MAX(read_time) AS max_time
-            FROM modbus_data
-            GROUP BY slave_id
-        ) t3 ON t1.slave_id = t3.slave_id AND t1.read_time = t3.max_time
-            -- 新增：左联device_archive表，匹配设备名称（status=0对应表中实际状态）
+                 -- 关联设备档案表，拿到设备的唯一device_id
                  LEFT JOIN device_archive t2
                            ON t1.slave_id = t2.slave_id
-                               AND t2.status = 0
-        ORDER BY t1.slave_id ASC;
+                               AND t2.status = 0 -- 只关联启用的设备
+                 INNER JOIN (
+            -- 子查询：按device_id分组，取每个设备的最新记录（唯一）
+            SELECT
+                t2.device_id,
+                MAX(t1.read_time) AS max_time, -- 最新采集时间
+                MAX(t1.id) AS max_id -- 避免同时间多条记录，取最大id
+            FROM modbus_data t1
+                     LEFT JOIN device_archive t2
+                               ON t1.slave_id = t2.slave_id
+                                   AND t2.status = 0
+            WHERE t2.device_id IS NOT NULL -- 过滤无对应设备的记录
+            GROUP BY t2.device_id -- 按设备唯一标识分组（5个device_id=5组）
+        ) t3 ON t2.device_id = t3.device_id
+            AND t1.read_time = t3.max_time
+            AND t1.id = t3.max_id
+        WHERE t2.device_id IS NOT NULL -- 只返回有对应设备的记录
+        ORDER BY t2.device_name ASC -- 按设备名称排序
     </select>
 </mapper>
