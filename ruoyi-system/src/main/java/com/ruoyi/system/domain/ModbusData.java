@@ -11,11 +11,11 @@ public class ModbusData {
     /** 主键ID（自增） */
     private Long id;
     /** Modbus从站ID（设备ID） */
-    private Integer slaveId;
+    private String slaveId;
     /** 温度（℃） */
-    private Double temperature;
+    private String temperature;
     /** 湿度（%RH） */
-    private Double humidity;
+    private String humidity;
     /** 采集时间 */
     private Date readTime;
 }

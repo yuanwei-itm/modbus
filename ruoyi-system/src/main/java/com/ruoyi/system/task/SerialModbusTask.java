@@ -1,5 +1,7 @@
 package com.ruoyi.system.task;
 
+import com.alibaba.fastjson.JSON;
+import com.ruoyi.system.constants.RedisKeyConstants;
 import com.ruoyi.system.domain.DeviceArchive;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.mapper.DeviceArchiveMapper;
@@ -7,15 +9,17 @@ import com.ruoyi.system.service.IModbusDataService;
 import com.ruoyi.common.utils.SerialModbusUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Modbus温湿度数据采集的定时任务
+ * Modbus温湿度数据采集的定时任务（String缓存版，无Hash冲突）
  */
 @Component
 public class SerialModbusTask {
@@ -33,6 +37,10 @@ public class SerialModbusTask {
     // 注入你的串口工具类
     @Resource
     private SerialModbusUtils serialModbusUtils;
+
+    //注入 RedisTemplate
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
 
     // 每5秒采集一次
     @Scheduled(cron = "0/5 * * * * ?")
@@ -66,18 +74,42 @@ public class SerialModbusTask {
                 log.info("设备[{}]采集完成：温度{}℃，湿度{}%RH",
                         deviceName, temperature, humidity);
 
-                // 封装入库（float转Double适配setter）
+                // 封装入库
                 ModbusData data = new ModbusData();
-                data.setSlaveId(slaveId);
-                data.setTemperature((double) temperature);  // 转Double
-                data.setHumidity((double) humidity);        // 转Double
+                data.setSlaveId(String.valueOf(slaveId)); // int转String
+                data.setTemperature(String.valueOf(temperature)); // Double转String
+                data.setHumidity(String.valueOf(humidity)); // Double转String
                 data.setReadTime(new Date());
                 modbusDataService.insertModbusData(data);
+
+                // 保留单设备String缓存
+                try {
+                    // 生成当前设备的独立缓存键（String类型）
+                    String slaveCacheKey = String.format(RedisKeyConstants.MODBUS_REALTIME_SLAVE_LATEST, slaveId);
+                    // 更新该设备的独立String缓存（有效期1小时）
+                    redisTemplate.opsForValue().set(
+                            slaveCacheKey,
+                            JSON.toJSONString(data),
+                            1, TimeUnit.HOURS
+                    );
+                    log.info("设备[{}]单设备缓存已实时更新（Slave{}）", deviceName, slaveId);
+                } catch (Exception e) {
+                    // 缓存更新失败仅打日志，不影响采集/入库主流程
+                    log.error("更新设备[{}]（Slave{}）单设备缓存失败", deviceName, slaveId, e);
+                }
 
             } catch (Exception e) {
                 log.error("设备[{}]（Slave{}）采集失败",
                         device.getDeviceName(), device.getSlaveId(), e);
             }
+        }
+
+        // 删除全量String缓存，确保查询时加载最新数据
+        try {
+            redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
+            log.info("所有设备采集完成，已删除全量实时数据缓存（下次查询自动加载最新数据）");
+        } catch (Exception e) {
+            log.error("删除全量实时数据缓存失败", e);
         }
 
         log.info("===== 所有设备采集结束 =====");
