@@ -1,10 +1,10 @@
 package com.ruoyi.system.controller;
 
+import com.github.pagehelper.PageInfo;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.service.IModbusDataService;
-import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入分页VO类
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,8 +39,8 @@ public class HistoryDataController extends BaseController {
         Date start = (startTime == null || startTime.trim().isEmpty()) ? null : SDF.parse(startTime);
         Date end = (endTime == null || endTime.trim().isEmpty()) ? null : SDF.parse(endTime);
 
-        // 调用Service查询：返回类型从 Map 改为 PageResultVO
-        PageResultVO result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
+        //调用ruoyi自带的pageinfo进行结果的分页
+        PageInfo<ModbusData> result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end,slaveId);
         return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
     }
 

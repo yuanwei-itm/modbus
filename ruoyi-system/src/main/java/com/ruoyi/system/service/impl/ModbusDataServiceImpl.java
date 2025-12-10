@@ -7,7 +7,6 @@ import com.ruoyi.system.constants.RedisKeyConstants;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.mapper.ModbusDataMapper;
 import com.ruoyi.system.service.IModbusDataService;
-import com.ruoyi.system.domain.vo.PageResultVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -137,18 +136,18 @@ public class ModbusDataServiceImpl implements IModbusDataService {
      * 关键修改：返回类型从 Map 改为 PageResultVO，结果封装适配VO
      */
     @Override
-    public PageResultVO queryHistoryData(  // 返回类型修改为 PageResultVO
-                                           Integer pageNum,
-                                           Integer pageSize,
-                                           Date startTime,
-                                           Date endTime,
-                                           Integer slaveId // 新增参数
+    public PageInfo<ModbusData> queryHistoryData(
+            Integer pageNum,
+            Integer pageSize,
+            Date startTime,
+            Date endTime,
+            Integer slaveId
     ) {
-        // 1. 参数校验（原有逻辑不变）
+        // 1. 参数校验
         if (pageNum == null || pageNum < 1) pageNum = 1;
         if (pageSize == null || pageSize < 1) pageSize = 10;
 
-        // 2. 时间范围限制（原有逻辑不变）
+        // 2. 时间范围限制
         if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
             if (startTime.after(endTime)) {
                 throw new IllegalArgumentException("开始时间不能晚于结束时间");
@@ -159,17 +158,14 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             }
         }
 
-        // 3. PageHelper分页查询（原有逻辑不变）
+        // 3. PageHelper分页（核心：startPage后紧跟查询语句，PageHelper自动拦截）
         PageHelper.startPage(pageNum, pageSize);
-        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime,slaveId);
+        // 4. 调用Mapper查询（XML无需写LIMIT，PageHelper自动拼接）
+        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime, slaveId);
+        // 5. 封装PageInfo（包含总条数、总页数、当前页等全量分页信息）
         PageInfo<ModbusData> pageInfo = new PageInfo<>(dataList);
 
-        // 4. 封装结果为 PageResultVO（核心修改：替换Map为VO）
-        return new PageResultVO(
-                pageNum,                // pagenum（当前页码）
-                pageSize,               // pagesize（每页条数）
-                pageInfo.getTotal(),    // total（总条数）
-                pageInfo.getList()      // list（数据列表）
-        );
+        log.info("分页查询历史数据：页码{}，页大小{}，总条数{}", pageNum, pageSize, pageInfo.getTotal());
+        return pageInfo;
     }
 }
