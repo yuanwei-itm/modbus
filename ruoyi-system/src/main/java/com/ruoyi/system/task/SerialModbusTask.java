@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * Modbus温湿度数据采集的定时任务（String缓存版，无Hash冲突）
+ * 优化点：动态计算从站读取起始地址和长度，适配非连续寄存器地址场景
  */
 @Component
 public class SerialModbusTask {
@@ -72,40 +73,65 @@ public class SerialModbusTask {
             log.info("开始采集物理从站Slave{}，包含{}个逻辑设备", slaveId, devicesInSlave.size());
 
             try {
-                // 动态计算该从站需要读取的总寄存器长度
-                int maxReadLength = devicesInSlave.stream()
-                        .mapToInt(d -> d.getOffset() + d.getRegCount())
-                        .max().orElse(0);
-                log.info("从站Slave{}需读取的总寄存器长度：{}", slaveId, maxReadLength);
+                // 动态地址优化核心逻辑
+                // 计算该从站下所有设备的最小寄存器起始地址（作为批量读取的起始地址）
+                int startAddress = devicesInSlave.stream()
+                        .mapToInt(DeviceArchive::getOffset)
+                        .min()
+                        .orElse(0);
 
-                // 批量读取该从站的所有寄存器
-                int[] allRegValues = serialModbusUtils.readModbusSlaveData(slaveId, 0, maxReadLength);
+                // 计算该从站下所有设备的最大寄存器结束位置（offset + regCount）
+                int maxEndAddress = devicesInSlave.stream()
+                        .mapToInt(d -> d.getOffset() + d.getRegCount())
+                        .max()
+                        .orElse(0);
+
+                // 计算实际需要读取的寄存器长度（结束位置 - 起始地址）
+                int readLength = maxEndAddress - startAddress;
+
+                log.info("从站Slave{} 优化采集策略：起始地址={}, 最大结束地址={}, 读取长度={}",
+                        slaveId, startAddress, maxEndAddress, readLength);
+
+                // 读取长度不合理（负数/0）时跳过该从站
+                if (readLength <= 0) {
+                    log.warn("从站Slave{} 读取长度不合理（readLength={}），跳过采集", slaveId, readLength);
+                    continue;
+                }
+
+                // 批量读取该从站的寄存器数据
+                int[] allRegValues = serialModbusUtils.readModbusSlaveData(slaveId, startAddress, readLength);
                 log.info("从站Slave{}读取到的寄存器数组：{}", slaveId, Arrays.toString(allRegValues));
 
-                // 防空指针崩溃·
+                // 防空指针崩溃
                 if (allRegValues == null || allRegValues.length == 0) {
                     log.warn("从站Slave{} 读取无响应，跳过", slaveId);
                     continue;
                 }
 
-                // 按每个逻辑设备的offset切分数据并封装
-                Date batchTime = new Date(); // 统一批次时间
+                // 统一批次时间（所有逻辑设备共用一个采集时间，保证时间一致性）
+                Date batchTime = new Date();
+
+                // 按每个逻辑设备的配置切分数据并封装
                 for (DeviceArchive dev : devicesInSlave) {
                     try {
                         String deviceId = dev.getDeviceId();       // 逻辑设备唯一ID（String）
                         String deviceName = dev.getDeviceName();   // 设备名称（String）
-                        int offset = dev.getOffset();              // 偏移量（Integer）
-                        int regCount = dev.getRegCount();          // 寄存器数量（Integer）
+                        int deviceOffset = dev.getOffset();        // 设备寄存器起始地址（配置值）
+                        int regCount = dev.getRegCount();          // 设备需要读取的寄存器数量
 
-                        // 校验偏移量是否越界
-                        if (offset + regCount > allRegValues.length) {
-                            log.error("设备[{}]（Slave{}）偏移量越界：offset={}, regCount={}, 数组长度={}",
-                                    deviceName, slaveId, offset, regCount, allRegValues.length);
+                        // 动态切分核心逻辑
+                        // 计算相对偏移量：设备物理地址 - 批量读取的起始地址（本地数组的切分下标）
+                        int relativeIndex = deviceOffset - startAddress;
+
+                        // 校验：相对偏移量越界（负数 或 超出数组长度）
+                        if (relativeIndex < 0 || (relativeIndex + regCount) > allRegValues.length) {
+                            log.error("设备[{}]（Slave{}）配置越界：设备偏移={}, 读取数量={}, 相对下标={}, 数组长度={}",
+                                    deviceName, slaveId, deviceOffset, regCount, relativeIndex, allRegValues.length);
                             continue;
                         }
 
-                        // 截取当前设备的寄存器值
-                        int[] devRegValues = Arrays.copyOfRange(allRegValues, offset, offset + regCount);
+                        // 截取当前设备的寄存器值（使用相对偏移量）
+                        int[] devRegValues = Arrays.copyOfRange(allRegValues, relativeIndex, relativeIndex + regCount);
                         log.info("设备[{}]（Slave{}）截取到的寄存器值：{}",
                                 deviceName, slaveId, Arrays.toString(devRegValues));
 
@@ -137,9 +163,8 @@ public class SerialModbusTask {
 
                         // 更新单设备Redis缓存
                         try {
-                            // 直接转JSON，实体类注解会自动处理格式和顺序
                             String dataJson = JSON.toJSONString(data);
-                            String deviceCacheKey = String.format(RedisKeyConstants.MODBUS_REALTIME_DEVICE_LATEST, deviceId); // 改回原始变量名
+                            String deviceCacheKey = String.format(RedisKeyConstants.MODBUS_REALTIME_DEVICE_LATEST, deviceId);
                             redisTemplate.opsForValue().set(
                                     deviceCacheKey,
                                     dataJson,
@@ -172,8 +197,9 @@ public class SerialModbusTask {
         // 重构全量缓存
         try {
             if (!allLatestDataList.isEmpty()) {
+                // 先删除旧的全量缓存
                 redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
-                // 直接转JSON
+                // 序列化全量数据为JSON并写入Redis
                 String allDataJson = JSON.toJSONString(allLatestDataList);
                 redisTemplate.opsForValue().set(
                         RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST,
