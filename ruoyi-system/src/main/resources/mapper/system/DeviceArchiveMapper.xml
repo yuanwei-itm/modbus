@@ -12,9 +12,11 @@
             device_id     AS deviceId,
             device_name   AS deviceName,
             comm_address  AS commAddress,
+            `offset` AS offset,         -- 新增：寄存器偏移量（必须加，否则实体类offset为null）
             slave_id      AS slaveId,
             status,
             reg_count     AS regCount
+
         FROM
             device_archive
         WHERE

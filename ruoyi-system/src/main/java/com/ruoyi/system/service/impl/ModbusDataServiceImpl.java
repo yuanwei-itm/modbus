@@ -35,7 +35,10 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     @Resource
     private RedisTemplate<String, String> redisTemplate;
 
-
+    @Override
+    public boolean checkDataExists(String deviceId, Date readTime) {
+        return modbusDataMapper.countByDeviceIdAndReadTime(deviceId, readTime) > 0;
+    }
 
     // 改造后的单条插入方法
     @Override
@@ -55,7 +58,33 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         // 直接返回插入结果：1=成功，0=失败
         return insertCount;
     }
+    /**
+     * 批量插入Modbus数据（核心补全方法）
+     * 保证原子性：要么全插入成功，要么全回滚
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean batchInsertModbusData(List<ModbusData> batchDataList) {
+        // 1. 空值校验：避免空列表插入
+        if (batchDataList == null || batchDataList.isEmpty()) {
+            log.warn("批量插入数据为空，跳过入库操作");
+            return false;
+        }
 
+        // 2. 执行批量入库
+        int insertCount = modbusDataMapper.batchInsertModbusData(batchDataList);
+        boolean isSuccess = insertCount == batchDataList.size();
+
+        // 3. 日志输出结果
+        if (isSuccess) {
+            log.info("批量插入Modbus数据成功：共{}条", insertCount);
+        } else {
+            log.error("批量插入Modbus数据异常：预期插入{}条，实际插入{}条",
+                    batchDataList.size(), insertCount);
+        }
+
+        return isSuccess;
+    }
     /**
      * 查询所有设备各自的最新一条数据（优先从Redis获取，缓存失效则查库兜底）
      *

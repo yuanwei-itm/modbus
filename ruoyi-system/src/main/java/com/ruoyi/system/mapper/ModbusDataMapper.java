@@ -23,4 +23,7 @@ public interface ModbusDataMapper {
     List<ModbusData> selectLatestDataByAllSlaveIds();
 
     int insert(ModbusData modbusData);
+
+    int countByDeviceIdAndReadTime(@Param("deviceId") String deviceId, @Param("readTime") Date readTime);
+    int batchInsertModbusData(List<ModbusData> batchDataList);
 }

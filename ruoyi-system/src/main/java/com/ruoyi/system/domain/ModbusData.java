@@ -14,6 +14,8 @@ public class ModbusData {
     private String deviceName;
     /** Modbus从站ID（设备ID） */
     private String slaveId;
+    /**设备唯一ID*/
+    private String deviceId;
     /** 温度（℃） */
     private String temperature;
     /** 湿度（%RH） */
