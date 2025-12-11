@@ -14,7 +14,7 @@ public interface IModbusDataService {
     boolean checkDataExists(String deviceId, Date readTime);
 
     // 修正返回类型为PageInfo
-    PageInfo<ModbusData> queryHistoryData(Integer pageNum, Integer pageSize, Date startTime, Date endTime, Integer slaveId);
+    PageInfo<ModbusData> queryHistoryData(Integer pageNum, Integer pageSize, Date startTime, Date endTime, Integer slaveId, String deviceId);
 
     boolean batchInsertModbusData(List<ModbusData> batchDataList);
 }

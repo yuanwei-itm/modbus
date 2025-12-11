@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Modbus数据业务层实现类
  * 处理Modbus数据的增删改查、缓存等核心业务逻辑
- *
  */
 @Service
 public class ModbusDataServiceImpl implements IModbusDataService {
@@ -31,7 +30,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     @Resource
     private ModbusDataMapper modbusDataMapper;
 
-    // 注入RedisTemplate（Spring自动配置，用于缓存设备实时数据）
+    // 注入RedisTemplate
     @Resource
     private RedisTemplate<String, String> redisTemplate;
 
@@ -40,7 +39,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         return modbusDataMapper.countByDeviceIdAndReadTime(deviceId, readTime) > 0;
     }
 
-    // 改造后的单条插入方法
+    // 单条插入
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int insertModbusData(ModbusData modbusData) {
@@ -58,6 +57,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         // 直接返回插入结果：1=成功，0=失败
         return insertCount;
     }
+
     /**
      * 批量插入Modbus数据（核心补全方法）
      * 保证原子性：要么全插入成功，要么全回滚
@@ -65,17 +65,17 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean batchInsertModbusData(List<ModbusData> batchDataList) {
-        // 1. 空值校验：避免空列表插入
+        // 空值校验：避免空列表插入
         if (batchDataList == null || batchDataList.isEmpty()) {
             log.warn("批量插入数据为空，跳过入库操作");
             return false;
         }
 
-        // 2. 执行批量入库
+        // 执行批量入库
         int insertCount = modbusDataMapper.batchInsertModbusData(batchDataList);
         boolean isSuccess = insertCount == batchDataList.size();
 
-        // 3. 日志输出结果
+        // 日志输出结果
         if (isSuccess) {
             log.info("批量插入Modbus数据成功：共{}条", insertCount);
         } else {
@@ -85,6 +85,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
 
         return isSuccess;
     }
+
     /**
      * 查询所有设备各自的最新一条数据（优先从Redis获取，缓存失效则查库兜底）
      *
@@ -104,11 +105,11 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             log.error("Redis查询所有设备实时数据失败，将查询数据库兜底", e);
         }
 
-        // 2. Redis无数据/异常时，查询数据库获取所有设备最新数据
+        // Redis无数据/异常时，查询数据库获取所有设备最新数据
         List<ModbusData> dbDataList = modbusDataMapper.selectLatestDataByAllSlaveIds();
         if (!dbDataList.isEmpty()) {
             log.info("从数据库获取所有设备实时数据成功，共{}条", dbDataList.size());
-            // 3. 将数据库查询结果缓存到Redis（有效期1小时）
+            // 将数据库查询结果缓存到Redis
             try {
                 redisTemplate.opsForValue().set(
                         RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST,
@@ -125,13 +126,14 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     }
 
     /**
-     * 分页查询Modbus历史数据（支持时间范围、设备ID筛选）
+     * 分页查询Modbus历史数据（支持时间范围、从站ID、设备ID筛选）
      *
      * @param pageNum    当前页码（默认1）
      * @param pageSize   每页条数（默认10）
      * @param startTime  采集开始时间（可选）
      * @param endTime    采集结束时间（可选）
-     * @param slaveId    设备ID（可选）
+     * @param slaveId    从站ID（可选）
+     * @param deviceId   设备ID（可选）
      * @return 分页结果对象（包含总条数、当前页数据、分页元信息）
      */
     @Override
@@ -140,9 +142,10 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             Integer pageSize,
             Date startTime,
             Date endTime,
-            Integer slaveId
+            Integer slaveId,
+            String deviceId
     ) {
-        // 1. 分页参数校验（默认值填充）
+        // 分页参数校验
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
         }
@@ -150,7 +153,7 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             pageSize = 10;
         }
 
-        // 2. 时间范围合法性校验（最大查询区间30天）
+        // 时间范围合法性校验（最大查询区间30天）
         if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
             if (startTime.after(endTime)) {
                 throw new IllegalArgumentException("查询条件异常：开始时间不能晚于结束时间");
@@ -161,15 +164,22 @@ public class ModbusDataServiceImpl implements IModbusDataService {
             }
         }
 
-        // 3. PageHelper启动分页（紧跟查询语句，自动拼接LIMIT）
+        // PageHelper启动分页
         PageHelper.startPage(pageNum, pageSize);
-        // 4. 执行条件查询
-        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(startTime, endTime, slaveId);
-        // 5. 封装分页结果（包含总条数、总页数等元信息）
+
+        // 执行条件查询
+        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(
+                startTime,
+                endTime,
+                slaveId,
+                deviceId // 新增：传递设备ID参数
+        );
+
+        // 封装分页结果（包含总条数、总页数等元信息）
         PageInfo<ModbusData> pageInfo = new PageInfo<>(dataList);
 
-        log.info("分页查询Modbus历史数据：页码{}，页大小{}，总条数{}",
-                pageNum, pageSize, pageInfo.getTotal());
+        log.info("分页查询Modbus历史数据：页码{}，页大小{}，总条数{}，筛选条件（slaveId={}, deviceId={}, 时间范围={}~{}）",
+                pageNum, pageSize, pageInfo.getTotal(), slaveId, deviceId, startTime, endTime);
         return pageInfo;
     }
 }

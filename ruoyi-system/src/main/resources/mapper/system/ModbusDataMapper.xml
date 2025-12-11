@@ -6,8 +6,8 @@
     <!-- 结果集映射：数据库下划线→实体驼峰 -->
     <resultMap id="ModbusDataResultMap" type="com.ruoyi.system.domain.ModbusData">
         <id column="id" property="id"/>
-        <result column="device_id" property="deviceId"/> <!-- 新增：映射device_id -->
         <result column="slave_id" property="slaveId"/>
+        <result column="device_id" property="deviceId"/>
         <result column="temperature" property="temperature"/>
         <result column="humidity" property="humidity"/>
         <result column="read_time" property="readTime"/>
@@ -32,14 +32,15 @@
     <!-- 按时间范围查询历史数据，联表查设备名称 -->
     <select id="selectHistoryDataByTimeRange" resultMap="ModbusDataResultMap">
         SELECT
-        t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
-        COALESCE(t2.device_name, '未知设备') AS device_name
+        t1.id,t1.slave_id,t1.device_id, t1.temperature,t1.humidity,t1.read_time,
+        COALESCE(t2.device_name, '未知设备') AS device_name -- 设备名兜底
         FROM modbus_data t1
-        LEFT JOIN device_archive t2 ON t1.slave_id = t2.slave_id AND t2.status = 0
+        LEFT JOIN device_archive t2 ON t1.slave_id = t2.slave_id AND t1.device_id = t2.device_id AND t2.status = 0
         <where>
             <if test="startTime != null">t1.read_time &gt;= #{startTime}</if>
             <if test="endTime != null">AND t1.read_time &lt;= #{endTime}</if>
             <if test="slaveId != null">AND t1.slave_id = #{slaveId}</if>
+            <if test="deviceId != null">AND t1.device_id = #{deviceId}</if>
         </where>
         ORDER BY  t1.read_time DESC,t2.device_name ASC
     </select>
