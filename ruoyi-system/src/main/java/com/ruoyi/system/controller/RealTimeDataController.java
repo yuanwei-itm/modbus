@@ -22,7 +22,13 @@ public class RealTimeDataController {
     @GetMapping("/realtime")
     public AjaxResult getRealTimeData() {
         List<ModbusData> realTimeData = modbusDataService.getLatestDataByAllSlaveIds();
+
+        if (realTimeData != null) {
+            for (ModbusData data : realTimeData) {
+                data.setId(null);
+            }
+        }
+        // 返回序列化后的JSON字符串
         return AjaxResult.success("获取实时数据成功", realTimeData);
     }
-
 }

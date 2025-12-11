@@ -73,18 +73,20 @@ public class SerialModbusTask {
 
             try {
                 // 动态计算该从站需要读取的总寄存器长度
-                int maxReadLength = 0;
-                for (DeviceArchive dev : devicesInSlave) {
-                    int endPos = dev.getOffset() + dev.getRegCount();
-                    if (endPos > maxReadLength) {
-                        maxReadLength = endPos;
-                    }
-                }
+                int maxReadLength = devicesInSlave.stream()
+                        .mapToInt(d -> d.getOffset() + d.getRegCount())
+                        .max().orElse(0);
                 log.info("从站Slave{}需读取的总寄存器长度：{}", slaveId, maxReadLength);
 
                 // 批量读取该从站的所有寄存器
                 int[] allRegValues = serialModbusUtils.readModbusSlaveData(slaveId, 0, maxReadLength);
                 log.info("从站Slave{}读取到的寄存器数组：{}", slaveId, Arrays.toString(allRegValues));
+
+                // 防空指针崩溃·
+                if (allRegValues == null || allRegValues.length == 0) {
+                    log.warn("从站Slave{} 读取无响应，跳过", slaveId);
+                    continue;
+                }
 
                 // 按每个逻辑设备的offset切分数据并封装
                 Date batchTime = new Date(); // 统一批次时间
@@ -135,10 +137,12 @@ public class SerialModbusTask {
 
                         // 更新单设备Redis缓存
                         try {
-                            String deviceCacheKey = String.format(RedisKeyConstants.MODBUS_REALTIME_DEVICE_LATEST, deviceId);
+                            // 直接转JSON，实体类注解会自动处理格式和顺序
+                            String dataJson = JSON.toJSONString(data);
+                            String deviceCacheKey = String.format(RedisKeyConstants.MODBUS_REALTIME_DEVICE_LATEST, deviceId); // 改回原始变量名
                             redisTemplate.opsForValue().set(
                                     deviceCacheKey,
-                                    JSON.toJSONString(data),
+                                    dataJson,
                                     1, TimeUnit.HOURS
                             );
                             log.info("设备[{}]缓存更新成功（deviceId={}）", deviceName, deviceId);
@@ -165,12 +169,21 @@ public class SerialModbusTask {
             log.warn("本次采集无有效数据，跳过批量入库");
         }
 
-        // 删除全量String缓存，确保查询时加载最新数据
+        // 重构全量缓存
         try {
-            redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
-            log.info("所有设备采集完成，已删除全量实时数据缓存（下次查询自动加载最新数据）");
+            if (!allLatestDataList.isEmpty()) {
+                redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
+                // 直接转JSON
+                String allDataJson = JSON.toJSONString(allLatestDataList);
+                redisTemplate.opsForValue().set(
+                        RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST,
+                        allDataJson,
+                        1, TimeUnit.HOURS
+                );
+                log.info("全量实时数据缓存重构成功，共{}个设备", allLatestDataList.size());
+            }
         } catch (Exception e) {
-            log.error("删除全量实时数据缓存失败", e);
+            log.error("重构全量实时数据缓存失败", e);
         }
 
         log.info("===== 所有设备采集结束 =====");
