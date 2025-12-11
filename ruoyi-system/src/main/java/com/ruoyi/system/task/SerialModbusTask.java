@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * Modbus温湿度数据采集的定时任务（String缓存版，无Hash冲突）
- * 优化点：动态计算从站读取起始地址和长度，适配非连续寄存器地址场景
+ * 优化点：删除冗余offset列，直接用comm_address计算切分位置
  */
 @Component
 public class SerialModbusTask {
@@ -74,15 +74,15 @@ public class SerialModbusTask {
 
             try {
                 // 动态地址优化核心逻辑
-                // 计算该从站下所有设备的最小寄存器起始地址（作为批量读取的起始地址）
+                // 计算该从站下所有设备的最小comm_address
                 int startAddress = devicesInSlave.stream()
-                        .mapToInt(DeviceArchive::getOffset)
+                        .mapToInt(DeviceArchive::getCommAddress)
                         .min()
                         .orElse(0);
 
-                // 计算该从站下所有设备的最大寄存器结束位置（offset + regCount）
+                // 计算该从站下所有设备的最大结束位置（comm_address + regCount）
                 int maxEndAddress = devicesInSlave.stream()
-                        .mapToInt(d -> d.getOffset() + d.getRegCount())
+                        .mapToInt(d -> d.getCommAddress() + d.getRegCount())
                         .max()
                         .orElse(0);
 
@@ -116,17 +116,17 @@ public class SerialModbusTask {
                     try {
                         String deviceId = dev.getDeviceId();       // 逻辑设备唯一ID（String）
                         String deviceName = dev.getDeviceName();   // 设备名称（String）
-                        int deviceOffset = dev.getOffset();        // 设备寄存器起始地址（配置值）
+                        int commAddress = dev.getCommAddress();    // 替换：offset→comm_address（设备物理寄存器地址）
                         int regCount = dev.getRegCount();          // 设备需要读取的寄存器数量
 
-                        // 动态切分核心逻辑
-                        // 计算相对偏移量：设备物理地址 - 批量读取的起始地址（本地数组的切分下标）
-                        int relativeIndex = deviceOffset - startAddress;
+                        // 用comm_address计算相对偏移
+                        // 相对偏移量 = 设备物理地址 - 批量读取的起始地址（本地数组的切分下标）
+                        int relativeIndex = commAddress - startAddress;
 
                         // 校验：相对偏移量越界（负数 或 超出数组长度）
                         if (relativeIndex < 0 || (relativeIndex + regCount) > allRegValues.length) {
-                            log.error("设备[{}]（Slave{}）配置越界：设备偏移={}, 读取数量={}, 相对下标={}, 数组长度={}",
-                                    deviceName, slaveId, deviceOffset, regCount, relativeIndex, allRegValues.length);
+                            log.error("设备[{}]（Slave{}）配置越界：设备物理地址={}, 读取数量={}, 相对下标={}, 数组长度={}",
+                                    deviceName, slaveId, commAddress, regCount, relativeIndex, allRegValues.length);
                             continue;
                         }
 

@@ -16,9 +16,6 @@ public class DeviceArchive {
     // 对应表中comm_address（起始寄存器地址）
     private Integer commAddress;
 
-    // 新增：寄存器偏移量
-    private Integer offset;
-
     // 对应表中slave_id（Modbus从站ID，唯一）
     private Integer slaveId;
 
