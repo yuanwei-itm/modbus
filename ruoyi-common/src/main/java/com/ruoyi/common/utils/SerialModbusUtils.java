@@ -9,14 +9,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-/**
- * 基于jSerialComm的Modbus RTU数据采集工具类（纯若依+MyBatis版）
- */
 @Component
 public class SerialModbusUtils {
     private static final Logger log = LoggerFactory.getLogger(SerialModbusUtils.class);
 
-    // 从application.yml读取配置
+    // 从配置文件读固定参数
     @Value("${serial-modbus.port-name}")
     private String portName;
     @Value("${serial-modbus.baud-rate}")
@@ -27,22 +24,14 @@ public class SerialModbusUtils {
     private int stopBits;
     @Value("${serial-modbus.parity}")
     private String parity;
-    @Value("${serial-modbus.slave-id}")
-    private int slaveId;
     @Value("${serial-modbus.timeout}")
     private int timeout;
-    @Value("${serial-modbus.register.start-address}")
-    private int startAddress;
-    @Value("${serial-modbus.register.quantity}")
-    private int quantity;
     @Value("${serial-modbus.register.type}")
-    private String registerType;
+    private String registerType;  // 保持寄存器/输入寄存器（全局配置）
 
-    /**
-     * 打开并配置串口（修复jSerialComm无exists()方法问题）
-     */
+    // 1. 打开串口
     private SerialPort openSerialPort() {
-        // 1. 校验串口是否存在（枚举所有可用串口）
+        // 校验串口是否存在
         boolean portExists = false;
         SerialPort[] allPorts = SerialPort.getCommPorts();
         for (SerialPort port : allPorts) {
@@ -57,13 +46,13 @@ public class SerialModbusUtils {
             throw new RuntimeException(errorMsg);
         }
 
-        // 2. 初始化串口
+        // 初始化并配置串口
         SerialPort serialPort = SerialPort.getCommPort(portName);
         serialPort.setBaudRate(baudRate);
         serialPort.setNumDataBits(dataBits);
         serialPort.setNumStopBits(stopBits);
 
-        // 3. 配置校验位
+        // 配置校验位
         switch (parity.toUpperCase()) {
             case "NONE":
                 serialPort.setParity(SerialPort.NO_PARITY);
@@ -75,137 +64,116 @@ public class SerialModbusUtils {
                 serialPort.setParity(SerialPort.EVEN_PARITY);
                 break;
             default:
-                String errorMsg = "不支持的校验位：" + parity;
-                log.error(errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                throw new IllegalArgumentException("不支持的校验位：" + parity);
         }
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, timeout, timeout);
 
-        // 4. 打开串口
+        // 打开串口
         if (!serialPort.openPort()) {
-            String errorMsg = "串口" + portName + "打开失败！";
-            log.error(errorMsg);
-            throw new RuntimeException(errorMsg);
+            throw new RuntimeException("串口" + portName + "打开失败！");
         }
-        log.info("串口{}打开成功，参数：波特率{}，校验位{}", portName, baudRate, parity);
+        log.info("串口{}打开成功（波特率{}，校验位{}）", portName, baudRate, parity);
         return serialPort;
     }
 
-    /**
-     * 组装Modbus RTU请求帧（03读保持寄存器/04读输入寄存器）
-     */
-    private byte[] assembleModbusRTUFrame() {
-        // 功能码：03=holding，04=input
+    // 2. 组装Modbus RTU请求帧（动态接收slaveId、startAddress、quantity）
+    private byte[] assembleModbusRTUFrame(int slaveId, int startAddress, int quantity) {
+        // 功能码（03=保持寄存器，04=输入寄存器）
         byte functionCode = "holding".equalsIgnoreCase(registerType) ? (byte) 0x03 : (byte) 0x04;
 
-        // 组装核心帧（从站ID+功能码+起始地址+寄存器数量）
+        // 组装帧（从站ID+功能码+起始地址+数量）
         ByteBuffer buffer = ByteBuffer.allocate(6);
         buffer.order(ByteOrder.BIG_ENDIAN); // Modbus大端序
-        buffer.put((byte) slaveId);
+        buffer.put((byte) slaveId);         // 动态传入的从站ID
         buffer.put(functionCode);
-        buffer.putShort((short) startAddress);
-        buffer.putShort((short) quantity);
+        buffer.putShort((short) startAddress); // 动态传入的起始地址
+        buffer.putShort((short) quantity);     // 动态传入的数量
         byte[] frameWithoutCRC = buffer.array();
 
-        // 计算CRC16并拼接完整帧
+        // 计算CRC16
         String crcHex = ConvertHexStrAndStrUtils.calculateCRC16(frameWithoutCRC);
         byte[] crc = ConvertHexStrAndStrUtils.hexStrToBytes(crcHex);
         if (crc == null || crc.length != 2) {
-            throw new RuntimeException("CRC16计算异常：" + crcHex);
+            throw new RuntimeException("CRC16计算失败：" + crcHex);
         }
 
+        // 拼接完整帧（6字节帧+2字节CRC）
         byte[] fullFrame = new byte[8];
         System.arraycopy(frameWithoutCRC, 0, fullFrame, 0, 6);
         System.arraycopy(crc, 0, fullFrame, 6, 2);
-        log.info("Modbus RTU请求帧：{}", ConvertHexStrAndStrUtils.bytesToHexStr(fullFrame));
+        log.info("请求帧：{}", ConvertHexStrAndStrUtils.bytesToHexStr(fullFrame));
         return fullFrame;
     }
 
-    /**
-     * 解析Modbus RTU响应帧（提取寄存器值）
-     */
-    private int[] parseModbusRTUResponse(byte[] response) {
-        // 校验响应长度
+    // 3. 解析响应帧
+    private int[] parseModbusRTUResponse(byte[] response, int quantity, int startAddress) {
         if (response == null || response.length < 5) {
-            throw new RuntimeException("响应帧长度异常：" + (response == null ? 0 : response.length));
+            throw new RuntimeException("响应帧长度异常（" + (response == null ? 0 : response.length) + "字节）");
         }
 
-        // 校验CRC16（核心，防止数据错误）
+        // 校验CRC
         if (!ConvertHexStrAndStrUtils.checkCRC16(response)) {
-            String errorMsg = "CRC16校验失败：" + ConvertHexStrAndStrUtils.bytesToHexStr(response);
-            log.error(errorMsg);
-            throw new RuntimeException(errorMsg);
+            throw new RuntimeException("CRC校验失败：" + ConvertHexStrAndStrUtils.bytesToHexStr(response));
         }
 
-        // 校验功能码（异常响应判断）
+        // 校验功能码（是否异常响应）
         byte functionCode = response[1];
         if ((functionCode & 0x80) != 0) {
-            throw new RuntimeException("Modbus Slave异常响应：功能码=" + Integer.toHexString(functionCode));
+            throw new RuntimeException("设备异常响应（功能码：" + Integer.toHexString(functionCode) + "）");
         }
 
-        // 解析寄存器值（验证数据长度）
+        // 解析寄存器值
         int byteCount = response[2] & 0xFF;
-        if (byteCount != quantity * 2) {
-            throw new RuntimeException("数据长度异常：预期" + (quantity*2) + "字节，实际" + byteCount + "字节");
+        if (byteCount != quantity * 2) { // 每个寄存器2字节
+            throw new RuntimeException("数据长度异常（预期" + quantity*2 + "字节，实际" + byteCount + "字节）");
         }
 
         int[] registerValues = new int[quantity];
         for (int i = 0; i < quantity; i++) {
-            int high = response[3 + i * 2] & 0xFF;
-            int low = response[4 + i * 2] & 0xFF;
-            registerValues[i] = (high << 8) | low;
-            log.info("寄存器地址{}，值：{}", startAddress + i, registerValues[i]);
+            int high = response[3 + i*2] & 0xFF; // 高8位
+            int low = response[4 + i*2] & 0xFF;  // 低8位
+            registerValues[i] = (high << 8) | low; // 拼接16位值
+            log.info("寄存器地址{}，值：{}", startAddress + i, registerValues[i]); // 使用动态传入的startAddress
         }
         return registerValues;
     }
 
-    /**
-     * 对外暴露：读取Modbus Slave数据（核心方法）
-     */
-    public int[] readModbusSlaveData() {
+    // 4. 对外暴露：读取指定设备的寄存器（核心方法，动态参数）
+    public int[] readModbusSlaveData(int slaveId, int startAddress, int quantity) {
         SerialPort serialPort = null;
         try {
-            // 1. 打开串口
+            // 打开串口
             serialPort = openSerialPort();
 
-            // 2. 组装并发送请求帧
-            byte[] requestFrame = assembleModbusRTUFrame();
+            // 组装并发送请求
+            byte[] requestFrame = assembleModbusRTUFrame(slaveId, startAddress, quantity);
             int sendLen = serialPort.writeBytes(requestFrame, requestFrame.length);
             if (sendLen != requestFrame.length) {
-                throw new RuntimeException("请求帧发送失败：预期" + requestFrame.length + "字节，实际" + sendLen + "字节");
+                throw new RuntimeException("请求发送失败（预期" + requestFrame.length + "，实际" + sendLen + "）");
             }
 
-            // 3. 读取响应帧（等待Slave响应）
-            Thread.sleep(100); // 可根据波特率调整
+            // 读取响应（等待设备回复）
+            Thread.sleep(100); // 短暂延迟，确保响应到达
             int availableBytes = serialPort.bytesAvailable();
             if (availableBytes == 0) {
-                throw new RuntimeException("未读取到Modbus Slave响应");
+                throw new RuntimeException("未收到设备响应（Slave" + slaveId + "）");
             }
             byte[] responseFrame = new byte[availableBytes];
             serialPort.readBytes(responseFrame, availableBytes);
-            log.info("Modbus RTU响应帧：{}", ConvertHexStrAndStrUtils.bytesToHexStr(responseFrame));
+            log.info("响应帧（Slave{}）：{}", slaveId, ConvertHexStrAndStrUtils.bytesToHexStr(responseFrame));
 
-            // 4. 解析响应
-            return parseModbusRTUResponse(responseFrame);
+            // 解析响应（传入动态startAddress）
+            return parseModbusRTUResponse(responseFrame, quantity, startAddress);
 
         } catch (InterruptedException e) {
-            log.error("串口通信等待异常", e);
-            throw new RuntimeException("串口通信等待异常", e);
+            log.error("串口等待异常", e);
+            throw new RuntimeException("串口等待异常", e);
         } finally {
-            // 关闭串口（必须释放，否则端口占用）
+            // 关闭串口（释放资源）
             if (serialPort != null && serialPort.isOpen()) {
                 serialPort.closePort();
                 log.info("串口{}已关闭", portName);
             }
         }
-    }
-
-    // Getter（定时任务需要获取配置参数）
-    public int getStartAddress() {
-        return startAddress;
-    }
-
-    public int getSlaveId() {
-        return slaveId;
     }
 }

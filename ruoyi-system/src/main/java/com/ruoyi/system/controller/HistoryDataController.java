@@ -1,46 +1,37 @@
 package com.ruoyi.system.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
-import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.service.IModbusDataService;
-import com.ruoyi.system.domain.vo.PageResultVO; // 新增：导入分页VO类
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
-
+/**
+ * 历史数据控制器
+ * 处理Modbus历史数据的分页查询请求
+ */
 @RestController
 @RequestMapping("/api/history-data")
+
 public class HistoryDataController extends BaseController {
 
     @Resource
     private IModbusDataService modbusDataService;
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    /**
-     * 分页查询历史数据
-     * 示例：/api/history-data/query?pageNum=1&pageSize=10&startTime=2025-12-01 00:00:00&endTime=2025-12-08 23:59:59
-     */
     @GetMapping("/query")
-    public AjaxResult queryHistoryData(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String startTime,
-            @RequestParam(required = false) String endTime
-    ) throws ParseException {
-        // 解析时间参数（逻辑不变）
-        Date start = (startTime == null || startTime.trim().isEmpty()) ? null : SDF.parse(startTime);
-        Date end = (endTime == null || endTime.trim().isEmpty()) ? null : SDF.parse(endTime);
+    public TableDataInfo list(ModbusData modbusData) {
+        //开启分页
+        startPage();
 
-        // 调用Service查询：返回类型从 Map 改为 PageResultVO
-        PageResultVO result = modbusDataService.queryHistoryData(pageNum, pageSize, start, end);
-        return AjaxResult.success(result); // 直接返回VO，自动封装为目标格式
+        //查询数据
+        List<ModbusData> list = modbusDataService.selectModbusDataList(modbusData);
+
+        //返回自定义格式
+        return getDataTable(list);
     }
-
 }
