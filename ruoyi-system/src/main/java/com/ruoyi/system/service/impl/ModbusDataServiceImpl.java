@@ -1,8 +1,6 @@
 package com.ruoyi.system.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.ruoyi.system.constants.RedisKeyConstants;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.mapper.ModbusDataMapper;
@@ -16,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,24 +36,6 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         return modbusDataMapper.countByDeviceIdAndReadTime(deviceId, readTime) > 0;
     }
 
-    // 单条插入
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int insertModbusData(ModbusData modbusData) {
-        // 空数据校验：避免插入空对象
-        if (modbusData == null) {
-            log.warn("单条插入数据为空，跳过入库操作");
-            return 0;
-        }
-
-        // 执行单条数据入库
-        int insertCount = modbusDataMapper.insert(modbusData);
-        log.info("单条插入Modbus数据（slaveId={}）：{}",
-                modbusData.getSlaveId(), insertCount > 0 ? "成功" : "失败");
-
-        // 直接返回插入结果：1=成功，0=失败
-        return insertCount;
-    }
 
     /**
      * 批量插入Modbus数据（核心补全方法）
@@ -125,61 +104,9 @@ public class ModbusDataServiceImpl implements IModbusDataService {
         return dbDataList;
     }
 
-    /**
-     * 分页查询Modbus历史数据（支持时间范围、从站ID、设备ID筛选）
-     *
-     * @param pageNum    当前页码（默认1）
-     * @param pageSize   每页条数（默认10）
-     * @param startTime  采集开始时间（可选）
-     * @param endTime    采集结束时间（可选）
-     * @param slaveId    从站ID（可选）
-     * @param deviceId   设备ID（可选）
-     * @return 分页结果对象（包含总条数、当前页数据、分页元信息）
-     */
     @Override
-    public PageInfo<ModbusData> queryHistoryData(
-            Integer pageNum,
-            Integer pageSize,
-            Date startTime,
-            Date endTime,
-            Integer slaveId,
-            String deviceId
-    ) {
-        // 分页参数校验
-        if (pageNum == null || pageNum < 1) {
-            pageNum = 1;
-        }
-        if (pageSize == null || pageSize < 1) {
-            pageSize = 10;
-        }
+    public List<ModbusData> selectModbusDataList(ModbusData modbusData) {
 
-        // 时间范围合法性校验（最大查询区间30天）
-        if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
-            if (startTime.after(endTime)) {
-                throw new IllegalArgumentException("查询条件异常：开始时间不能晚于结束时间");
-            }
-            long diffDays = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24);
-            if (diffDays > 30) {
-                throw new IllegalArgumentException("查询条件异常：时间区间不能超过30天");
-            }
-        }
-
-        // PageHelper启动分页
-        PageHelper.startPage(pageNum, pageSize);
-
-        // 执行条件查询
-        List<ModbusData> dataList = modbusDataMapper.selectHistoryDataByTimeRange(
-                startTime,
-                endTime,
-                slaveId,
-                deviceId // 新增：传递设备ID参数
-        );
-
-        // 封装分页结果（包含总条数、总页数等元信息）
-        PageInfo<ModbusData> pageInfo = new PageInfo<>(dataList);
-
-        log.info("分页查询Modbus历史数据：页码{}，页大小{}，总条数{}，筛选条件（slaveId={}, deviceId={}, 时间范围={}~{}）",
-                pageNum, pageSize, pageInfo.getTotal(), slaveId, deviceId, startTime, endTime);
-        return pageInfo;
+        return modbusDataMapper.selectModbusDataList(modbusData);
     }
 }

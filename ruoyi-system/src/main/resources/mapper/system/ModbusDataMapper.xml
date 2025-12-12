@@ -14,11 +14,17 @@
         <result column="device_name" property="deviceName"/>
     </resultMap>
 
-    <!--单条插入-->
-    <insert id="insert" parameterType="com.ruoyi.system.domain.ModbusData">
-        INSERT INTO modbus_data (device_id, slave_id, temperature, humidity, read_time)
-        VALUES (#{deviceId},#{slaveId}, #{temperature}, #{humidity}, #{readTime})
-    </insert>
+    <!--基础查询字段-->
+    <sql id="selectModbusDataVo">
+        SELECT
+            t1.id, t1.device_id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
+            COALESCE(t2.device_name, '未知设备') AS device_name  -- 设备名兜底，避免空值
+        FROM modbus_data t1
+                 LEFT JOIN device_archive t2
+                           ON t1.slave_id = t2.slave_id          -- 从站ID关联
+                               AND t1.device_id = t2.device_id       -- 设备ID关联
+                               AND t2.status = 0                     -- 仅关联启用状态的设备（status=0）
+    </sql>
 
     <!--批量插入-->
     <insert id="batchInsertModbusData" parameterType="java.util.List">
@@ -29,49 +35,43 @@
         </foreach>
     </insert>
 
-    <!-- 按时间范围查询历史数据，联表查设备名称 -->
-    <select id="selectHistoryDataByTimeRange" resultMap="ModbusDataResultMap">
-        SELECT
-        t1.id,t1.slave_id,t1.device_id, t1.temperature,t1.humidity,t1.read_time,
-        COALESCE(t2.device_name, '未知设备') AS device_name -- 设备名兜底
-        FROM modbus_data t1
-        LEFT JOIN device_archive t2 ON t1.slave_id = t2.slave_id AND t1.device_id = t2.device_id AND t2.status = 0
+    <!-- 历史数据查询SQL -->
+    <select id="selectModbusDataList" parameterType="com.ruoyi.system.domain.ModbusData" resultMap="ModbusDataResultMap">
+        <include refid="selectModbusDataVo"/>
         <where>
-            <if test="startTime != null">t1.read_time &gt;= #{startTime}</if>
-            <if test="endTime != null">AND t1.read_time &lt;= #{endTime}</if>
-            <if test="slaveId != null">AND t1.slave_id = #{slaveId}</if>
-            <if test="deviceId != null">AND t1.device_id = #{deviceId}</if>
+            <if test="slaveId != null">
+                AND t1.slave_id = #{slaveId}
+            </if>
+            <if test="deviceId != null and deviceId != ''">
+                AND t1.device_id = #{deviceId}
+            </if>
+            <if test="startTime != null">
+                AND t1.read_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND t1.read_time &lt;= #{endTime}
+            </if>
         </where>
-        ORDER BY  t1.read_time DESC,t2.device_name ASC
+        ORDER BY t1.read_time DESC
     </select>
 
     <!-- 实时数据查询SQL -->
     <select id="selectLatestDataByAllSlaveIds" resultMap="ModbusDataResultMap">
         SELECT
-            t1.id, t1.slave_id, t1.temperature, t1.humidity, t1.read_time,
-            COALESCE(t2.device_name, '未知设备') AS device_name
+            t1.id, t1.slave_id, t1.device_id, t1.temperature, t1.humidity, t1.read_time,
+            COALESCE(t2.device_name, '未知设备') AS device_name  -- 设备名兜底
         FROM modbus_data t1
-                 -- 关联设备档案表，拿到设备的唯一device_id
-                 LEFT JOIN device_archive t2
-                           ON t1.slave_id = t2.slave_id
-                               AND t2.status = 0 -- 只关联启用的设备
+                 -- 子查询：按device_id+slave_id分组，取每组最大ID（最新数据）
                  INNER JOIN (
-            -- 子查询：按device_id分组，取每个设备的最新记录（唯一）
-            SELECT
-                t2.device_id,
-                MAX(t1.read_time) AS max_time, -- 最新采集时间
-                MAX(t1.id) AS max_id -- 避免同时间多条记录，取最大id
-            FROM modbus_data t1
-                     LEFT JOIN device_archive t2
-                               ON t1.slave_id = t2.slave_id
-                                   AND t2.status = 0
-            WHERE t2.device_id IS NOT NULL -- 过滤无对应设备的记录
-            GROUP BY t2.device_id -- 按设备唯一标识分组（5个device_id=5组）
-        ) t3 ON t2.device_id = t3.device_id
-            AND t1.read_time = t3.max_time
-            AND t1.id = t3.max_id
-        WHERE t2.device_id IS NOT NULL -- 只返回有对应设备的记录
-        ORDER BY t2.device_name ASC -- 按设备名称排序
+            SELECT MAX(id) AS max_id
+            FROM modbus_data
+            GROUP BY device_id, slave_id
+        ) t3 ON t1.id = t3.max_id
+            -- 关联设备档案表获取设备名称
+                 LEFT JOIN device_archive t2
+                           ON t1.slave_id = t2.slave_id AND t1.device_id = t2.device_id AND t2.status = 0
+        WHERE t2.device_id IS NOT NULL  -- 过滤无对应设备档案的记录
+        ORDER BY t2.device_name ASC    -- 按设备名称升序排列
     </select>
 
     <select id="countByDeviceIdAndReadTime" resultType="java.lang.Integer">
@@ -79,4 +79,5 @@
         WHERE device_id = #{deviceId}
           AND read_time = #{readTime}
     </select>
+
 </mapper>

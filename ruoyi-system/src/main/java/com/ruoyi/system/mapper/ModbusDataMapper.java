@@ -10,21 +10,10 @@ import java.util.List;
 @Mapper
 public interface ModbusDataMapper {
 
-
-    /**
-     * 按时间范围查询历史数据（PageHelper分页）
-     */
-    List<ModbusData> selectHistoryDataByTimeRange(
-            @Param("startTime") Date startTime,
-            @Param("endTime") Date endTime,
-            @Param("slaveId") Integer slaveId,
-            @Param("deviceId") String deviceId
-    );
-
     List<ModbusData> selectLatestDataByAllSlaveIds();
-
-    int insert(ModbusData modbusData);
 
     int countByDeviceIdAndReadTime(@Param("deviceId") String deviceId, @Param("readTime") Date readTime);
     int batchInsertModbusData(List<ModbusData> batchDataList);
+
+    List<ModbusData> selectModbusDataList(ModbusData modbusData);
 }
