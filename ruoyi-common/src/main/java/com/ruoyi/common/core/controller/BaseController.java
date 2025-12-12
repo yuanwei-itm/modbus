@@ -1,8 +1,6 @@
 package com.ruoyi.common.core.controller;
 
 import java.beans.PropertyEditorSupport;
-import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
@@ -92,25 +90,6 @@ public class BaseController
         return rspData;
     }
 
-    protected Map<String, Object> getMyPageData(List<?> list) {
-        // 获取分页信息
-        PageInfo<?> pageInfo = new PageInfo<>(list);
-
-        // 构建内部 data 对象
-        Map<String, Object> dataObj = new LinkedHashMap<>();
-        dataObj.put("pageNum", pageInfo.getPageNum());
-        dataObj.put("pageSize", pageInfo.getPageSize());
-        dataObj.put("total", pageInfo.getTotal());
-        dataObj.put("list", list);
-
-        // 构建最外层返回
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("msg", "操作成功");
-        result.put("code", 200);
-        result.put("data", dataObj);
-
-        return result;
-    }
 
     /**
      * 返回成功

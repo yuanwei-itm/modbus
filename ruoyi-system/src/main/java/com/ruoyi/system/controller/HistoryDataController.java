@@ -1,6 +1,7 @@
 package com.ruoyi.system.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.service.IModbusDataService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,13 +17,14 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/history-data")
+
 public class HistoryDataController extends BaseController {
 
     @Resource
     private IModbusDataService modbusDataService;
 
     @GetMapping("/query")
-    public Map<String, Object> list(ModbusData modbusData) {
+    public TableDataInfo list(ModbusData modbusData) {
         //开启分页
         startPage();
 
@@ -30,6 +32,6 @@ public class HistoryDataController extends BaseController {
         List<ModbusData> list = modbusDataService.selectModbusDataList(modbusData);
 
         //返回自定义格式
-        return getMyPageData(list);
+        return getDataTable(list);
     }
 }

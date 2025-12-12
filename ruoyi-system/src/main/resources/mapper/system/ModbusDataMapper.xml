@@ -45,11 +45,11 @@
             <if test="deviceId != null and deviceId != ''">
                 AND t1.device_id = #{deviceId}
             </if>
-            <if test="startTime != null">
-                AND t1.read_time &gt;= #{startTime}
+            <if test="params.startTime != null">
+                AND t1.read_time &gt;= #{params.startTime}
             </if>
-            <if test="endTime != null">
-                AND t1.read_time &lt;= #{endTime}
+            <if test="params.endTime != null">
+                AND t1.read_time &lt;= #{params.endTime}
             </if>
         </where>
         ORDER BY t1.read_time DESC
