@@ -19,10 +19,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * Modbus温湿度数据采集的定时任务（String缓存版，无Hash冲突）
- * 优化点：删除冗余offset列，直接用comm_address计算切分位置
- */
 @Component
 public class SerialModbusTask {
 
@@ -46,7 +42,7 @@ public class SerialModbusTask {
 
     // 每10秒采集一次
     @Scheduled(cron = "0/10 * * * * ?")
-    @Transactional(rollbackFor = Exception.class) // 批量入库加事务，保证数据一致性
+    @Transactional(rollbackFor = Exception.class)
     public void collectModbusData() {
         log.info("===== 开始采集温湿度数据 =====");
 
@@ -194,12 +190,10 @@ public class SerialModbusTask {
             log.warn("本次采集无有效数据，跳过批量入库");
         }
 
-        // 重构全量缓存
+        // 先删旧缓存，再存新缓存
         try {
+            redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
             if (!allLatestDataList.isEmpty()) {
-                // 先删除旧的全量缓存
-                redisTemplate.delete(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
-                // 序列化全量数据为JSON并写入Redis
                 String allDataJson = JSON.toJSONString(allLatestDataList);
                 redisTemplate.opsForValue().set(
                         RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST,
@@ -207,6 +201,8 @@ public class SerialModbusTask {
                         1, TimeUnit.HOURS
                 );
                 log.info("全量实时数据缓存重构成功，共{}个设备", allLatestDataList.size());
+            } else {
+                log.warn("本次采集无有效数据，全量缓存已删除");
             }
         } catch (Exception e) {
             log.error("重构全量实时数据缓存失败", e);

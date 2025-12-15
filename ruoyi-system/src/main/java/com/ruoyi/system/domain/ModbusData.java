@@ -14,26 +14,47 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ModbusData extends BaseEntity {
 
-    @JSONField(ordinal = 1)
+    /**
+     * 数据库主键id
+     */
+    @JSONField(ordinal = 1) // Redis序列化字段排序
     private Long id;
 
+    /**
+     * 设备编号
+     */
     @JSONField(ordinal = 2)
     private String deviceId;
 
+    /**
+     * 设备名称
+     */
     @JSONField(ordinal = 3)
     private String deviceName;
 
+    /**
+     * Modbus Slave ID
+     */
     @JSONField(ordinal = 4)
     private String slaveId;
 
+    /**
+     * 温度
+     */
     @JSONField(ordinal = 5)
     private String temperature;
 
+    /**
+     * 湿度
+     */
     @JSONField(ordinal = 6)
     private String humidity;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @JSONField(ordinal = 99, format = "yyyy-MM-dd HH:mm:ss") // 给 Redis 用
+    /**
+     * 读取时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8") // API返回时间格式化
+    @JSONField(ordinal = 99, format = "yyyy-MM-dd HH:mm:ss") // Redis序列化时间格式化
     private Date readTime;
 
 }

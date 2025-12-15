@@ -18,10 +18,13 @@ public class R<T> implements Serializable
     /** 失败 */
     public static final int FAIL = HttpStatus.ERROR;
 
+    /** 状态码 */
     private int code;
 
+    /** 返回消息 */
     private String msg;
 
+    /** 数据对象 */
     private T data;
 
     public static <T> R<T> ok()
