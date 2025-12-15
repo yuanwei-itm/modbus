@@ -1,10 +1,5 @@
 package com.ruoyi.system.domain;
 
-import com.alibaba.fastjson.annotation.JSONField; // 用于Redis缓存(FastJSON)
-import com.fasterxml.jackson.annotation.JsonFormat; // 用于API返回(Jackson)
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder; // 用于API排序(Jackson)
-import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
 import java.util.Date;
 

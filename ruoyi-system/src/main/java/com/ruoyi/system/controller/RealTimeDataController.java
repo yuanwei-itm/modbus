@@ -1,6 +1,6 @@
 package com.ruoyi.system.controller;
 
-import com.ruoyi.common.core.domain.R; // 1. 引入这个类
+import com.ruoyi.common.core.domain.R;
 import com.ruoyi.system.domain.ModbusData;
 import com.ruoyi.system.service.IModbusDataService;
 import org.springframework.web.bind.annotation.GetMapping;
