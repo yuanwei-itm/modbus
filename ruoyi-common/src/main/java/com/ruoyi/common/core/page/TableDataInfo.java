@@ -1,27 +1,38 @@
 package com.ruoyi.common.core.page;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.List;
 
 /**
  * 表格分页数据对象
- * 
+ * * @param <T> 列表数据类型
  * @author ruoyi
  */
-public class TableDataInfo implements Serializable
+public class TableDataInfo<T> implements Serializable // 1. 类名后加 <T>
 {
     private static final long serialVersionUID = 1L;
 
-    /** 总记录数 */
+    /** 总记录数
+     * @mock 325*/
+    @ApiModelProperty("总记录数")
     private long total;
 
     /** 列表数据 */
-    private List<?> rows;
+    @ApiModelProperty("列表数据")
+    private List<T> rows; // 2. 把 ? 改成 T
 
-    /** 消息状态码 */
+    /** 消息状态码
+     * @mock 200
+     *  */
+    @ApiModelProperty("消息状态码")
     private int code;
 
-    /** 消息内容 */
+    /** 消息内容
+     * @mock 操作成功
+     * */
+    @ApiModelProperty("消息内容")
     private String msg;
 
     /**
@@ -33,11 +44,10 @@ public class TableDataInfo implements Serializable
 
     /**
      * 分页
-     * 
-     * @param list 列表数据
+     * * @param list 列表数据
      * @param total 总记录数
      */
-    public TableDataInfo(List<?> list, long total)
+    public TableDataInfo(List<T> list, long total) // 3. 构造方法参数也改 T
     {
         this.rows = list;
         this.total = total;
@@ -53,12 +63,12 @@ public class TableDataInfo implements Serializable
         this.total = total;
     }
 
-    public List<?> getRows()
+    public List<T> getRows() // 4. Getter 返回 T
     {
         return rows;
     }
 
-    public void setRows(List<?> rows)
+    public void setRows(List<T> rows) // 5. Setter 参数改 T
     {
         this.rows = rows;
     }

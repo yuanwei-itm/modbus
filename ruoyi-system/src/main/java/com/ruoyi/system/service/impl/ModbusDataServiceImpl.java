@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Modbus数据业务层实现类
@@ -66,14 +66,14 @@ public class ModbusDataServiceImpl implements IModbusDataService {
     }
 
     /**
-     * 查询所有设备各自的最新一条数据（优先从Redis获取，缓存失效则查库兜底）
+     * 查询所有设备各自的最新一条数据（仅从Redis获取，无数据返回空列表）
      *
      * @return 所有设备的最新数据列表（按slaveId升序排列）
      */
     @Override
     public List<ModbusData> getLatestDataByAllSlaveIds() {
         try {
-            // 1. 优先从Redis读取所有设备最新数据缓存
+            // 仅从Redis读取缓存，不查数据库
             String jsonData = redisTemplate.opsForValue().get(RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST);
             if (jsonData != null && !jsonData.isEmpty()) {
                 List<ModbusData> cacheData = JSON.parseArray(jsonData, ModbusData.class);
@@ -81,32 +81,16 @@ public class ModbusDataServiceImpl implements IModbusDataService {
                 return cacheData;
             }
         } catch (Exception e) {
-            log.error("Redis查询所有设备实时数据失败，将查询数据库兜底", e);
+            log.error("Redis查询所有设备实时数据失败", e);
         }
 
-        // Redis无数据/异常时，查询数据库获取所有设备最新数据
-        List<ModbusData> dbDataList = modbusDataMapper.selectLatestDataByAllSlaveIds();
-        if (!dbDataList.isEmpty()) {
-            log.info("从数据库获取所有设备实时数据成功，共{}条", dbDataList.size());
-            // 将数据库查询结果缓存到Redis
-            try {
-                redisTemplate.opsForValue().set(
-                        RedisKeyConstants.MODBUS_REALTIME_ALL_LATEST,
-                        JSON.toJSONString(dbDataList),
-                        1, TimeUnit.HOURS
-                );
-            } catch (Exception e) {
-                log.error("数据库兜底数据同步Redis失败", e);
-            }
-        } else {
-            log.warn("数据库中无任何设备的实时数据");
-        }
-        return dbDataList;
+        // 直接返回空列表
+        log.warn("Redis全量实时缓存为空，无最新数据返回");
+        return new ArrayList<>();
     }
 
     @Override
     public List<ModbusData> selectModbusDataList(ModbusData modbusData) {
-
         return modbusDataMapper.selectModbusDataList(modbusData);
     }
 }

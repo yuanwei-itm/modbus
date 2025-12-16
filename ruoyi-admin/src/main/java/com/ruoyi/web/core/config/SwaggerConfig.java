@@ -113,13 +113,13 @@ public class SwaggerConfig
         // 用ApiInfoBuilder进行定制
         return new ApiInfoBuilder()
                 // 设置标题
-                .title("标题：若依管理系统_接口文档")
+                .title("澳波泰克实习项目")
                 // 描述
-                .description("描述：用于管理集团旗下公司的人员信息,具体包括XXX,XXX模块...")
+                .description("基于若依的设备档案与数据管理")
                 // 作者信息
-                .contact(new Contact(ruoyiConfig.getName(), null, null))
+                .contact(new Contact("王靖文", null, null))
                 // 版本
-                .version("版本号:" + ruoyiConfig.getVersion())
+                .version("1.0.0" )
                 .build();
     }
 }
