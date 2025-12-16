@@ -138,7 +138,7 @@ swagger:
   # 是否开启swagger
   enabled: true
   # 请求前缀
-  pathMapping: /dev-api
+  pathMapping:
 
 # 防盗链配置
 referer:
