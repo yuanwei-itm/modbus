@@ -11,11 +11,20 @@ import java.io.Serializable;
 @Data
 public class ModbusQuery implements Serializable {
 
-    /** 开始时间 (格式：2025-12-01 10:00:00) */
+    /** 开始时间
+     * @mock 2025-12-01 10:00:00 */
+
     private String startTime;
 
-    /** 结束时间 (格式：2025-12-01 12:00:00) */
+    /** 结束时间
+     * @mock 2025-12-01 12:00:00 */
     private String endTime;
+
+    /** 数据页数
+     * @mock 1 */
     private Integer pageNum;
+
+    /** 每页数据条数
+     * @mock 5 */
     private Integer pageSize;
 }

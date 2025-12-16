@@ -15,7 +15,6 @@ import java.util.List;
 
 /**
  * 历史数据控制器
- * 处理Modbus历史数据的分页查询请求
  */
 @RestController
 @RequestMapping("/api/history-data")
@@ -26,7 +25,7 @@ public class HistoryDataController extends BaseController {
 
     /**
      * 获取历史数据列表
-     * @param query 查询参数 (包含 slaveId, 时间范围, 分页)
+     * @param query 查询参数
      * @return 分页数据
      */
     @GetMapping("/query")

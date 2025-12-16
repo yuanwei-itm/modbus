@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
-
+/**
+ * 实时数据控制器
+ */
 @RestController
 @RequestMapping("/api/realtime-data")
 public class RealTimeDataController {

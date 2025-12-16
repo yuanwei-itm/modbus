@@ -12,16 +12,21 @@ public class TableDataInfo<T> implements Serializable // 1. 类名后加 <T>
 {
     private static final long serialVersionUID = 1L;
 
-    /** 总记录数 */
+    /** 总记录数
+     * @mock 325*/
     private long total;
 
     /** 列表数据 */
     private List<T> rows; // 2. 把 ? 改成 T
 
-    /** 消息状态码 */
+    /** 消息状态码
+     * @mock 200
+     *  */
     private int code;
 
-    /** 消息内容 */
+    /** 消息内容
+     * @mock 操作成功
+     * */
     private String msg;
 
     /**
