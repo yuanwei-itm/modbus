@@ -1,5 +1,7 @@
 package com.ruoyi.common.core.page;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -14,19 +16,23 @@ public class TableDataInfo<T> implements Serializable // 1. 类名后加 <T>
 
     /** 总记录数
      * @mock 325*/
+    @ApiModelProperty("总记录数")
     private long total;
 
     /** 列表数据 */
+    @ApiModelProperty("列表数据")
     private List<T> rows; // 2. 把 ? 改成 T
 
     /** 消息状态码
      * @mock 200
      *  */
+    @ApiModelProperty("消息状态码")
     private int code;
 
     /** 消息内容
      * @mock 操作成功
      * */
+    @ApiModelProperty("消息内容")
     private String msg;
 
     /**

@@ -9,6 +9,8 @@ import com.ruoyi.system.service.IModbusDataService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.List;
 /**
  * 历史数据控制器
  */
+@Api(tags = "Modbus历史数据管理")
 @RestController
 @RequestMapping("/api/history-data")
 public class HistoryDataController extends BaseController {
@@ -28,6 +31,7 @@ public class HistoryDataController extends BaseController {
      * @param query 查询参数
      * @return 分页数据
      */
+    @ApiOperation("分页查询历史数据列表")
     @GetMapping("/query")
     public TableDataInfo<ModbusData> list(ModbusQuery query) {
         // 开启分页
