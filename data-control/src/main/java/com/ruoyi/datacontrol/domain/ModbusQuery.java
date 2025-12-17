@@ -1,4 +1,4 @@
-package com.ruoyi.system.domain;
+package com.ruoyi.datacontrol.domain;
 
 import lombok.Data;
 

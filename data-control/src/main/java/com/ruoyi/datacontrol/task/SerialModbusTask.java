@@ -1,11 +1,11 @@
-package com.ruoyi.system.task;
+package com.ruoyi.datacontrol.task;
 
 import com.alibaba.fastjson.JSON;
-import com.ruoyi.system.constants.RedisKeyConstants;
-import com.ruoyi.system.domain.DeviceArchive;
-import com.ruoyi.system.domain.ModbusData;
-import com.ruoyi.system.mapper.DeviceArchiveMapper;
-import com.ruoyi.system.service.IModbusDataService;
+import com.ruoyi.datacontrol.constants.RedisKeyConstants;
+import com.ruoyi.datacontrol.domain.DeviceArchive;
+import com.ruoyi.datacontrol.domain.ModbusData;
+import com.ruoyi.datacontrol.mapper.DeviceArchiveMapper;
+import com.ruoyi.datacontrol.service.IModbusDataService;
 import com.ruoyi.common.utils.SerialModbusUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

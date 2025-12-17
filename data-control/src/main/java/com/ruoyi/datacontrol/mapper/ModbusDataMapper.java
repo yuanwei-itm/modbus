@@ -1,6 +1,6 @@
-package com.ruoyi.system.mapper;
+package com.ruoyi.datacontrol.mapper;
 
-import com.ruoyi.system.domain.ModbusData;
+import com.ruoyi.datacontrol.domain.ModbusData;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.Date;

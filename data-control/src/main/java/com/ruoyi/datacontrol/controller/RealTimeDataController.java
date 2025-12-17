@@ -1,8 +1,8 @@
-package com.ruoyi.system.controller;
+package com.ruoyi.datacontrol.controller;
 
 import com.ruoyi.common.core.domain.R;
-import com.ruoyi.system.domain.ModbusData;
-import com.ruoyi.system.service.IModbusDataService;
+import com.ruoyi.datacontrol.domain.ModbusData;
+import com.ruoyi.datacontrol.service.IModbusDataService;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

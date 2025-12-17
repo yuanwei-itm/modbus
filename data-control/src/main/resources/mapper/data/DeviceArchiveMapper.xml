@@ -4,10 +4,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 命名空间必须和Mapper接口全路径一致 -->
-<mapper namespace="com.ruoyi.system.mapper.DeviceArchiveMapper">
+<mapper namespace="com.ruoyi.datacontrol.mapper.DeviceArchiveMapper">
 
     <!-- 查询所有启用的设备（对应你的表数据） -->
-    <select id="selectEnabledDevices" resultType="com.ruoyi.system.domain.DeviceArchive">
+    <select id="selectEnabledDevices" resultType="com.ruoyi.datacontrol.domain.DeviceArchive">
         SELECT
             device_id     AS deviceId,
             device_name   AS deviceName,
