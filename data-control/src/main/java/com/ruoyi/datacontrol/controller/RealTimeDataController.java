@@ -3,11 +3,10 @@ package com.ruoyi.datacontrol.controller;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.datacontrol.domain.ModbusData;
 import com.ruoyi.datacontrol.service.IModbusDataService;
+import com.ruoyi.datacontrol.task.SerialModbusTask; // 引入Task
 import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -21,6 +20,10 @@ public class RealTimeDataController {
 
     @Resource
     private IModbusDataService modbusDataService;
+
+    // 注入刚才写的任务类
+    @Resource
+    private SerialModbusTask serialModbusTask;
 
     /**
      * 获取实时数据
@@ -36,7 +39,18 @@ public class RealTimeDataController {
                 data.setId(null);
             }
         }
-        // 使用 R.ok() 来包装数据
         return R.ok(realTimeData);
+    }
+
+    /**
+     * 强制触发采集 (读硬件，速度慢)
+     * 前端“立即刷新”按钮调用这个
+     */
+    @ApiOperation("强制触发硬件采集")
+    @PostMapping("/trigger")
+    public R<Void> triggerCollection() {
+        // 调用加锁的方法，如果此时定时任务正在跑，这里会阻塞等待，直到拿到锁
+        serialModbusTask.manualCollect();
+        return R.ok();
     }
 }

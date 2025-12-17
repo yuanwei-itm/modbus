@@ -37,22 +37,14 @@ public class HistoryDataController extends BaseController {
         // 开启分页
         startPage();
 
-        // 数据转换：将前端传来的 Query 对象转回 Service 需要的 ModbusData 对象
-        ModbusData params = new ModbusData();
+        ModbusData searchParams = new ModbusData();
 
-        // 处理时间范围
-        if (StringUtils.isNotEmpty(query.getStartTime())) {
-            params.getParams().put("beginTime", query.getStartTime());
-        }
+        searchParams.setDeviceId(query.getDeviceId());
 
-        if (StringUtils.isNotEmpty(query.getEndTime())) {
-            params.getParams().put("endTime", query.getEndTime());
-        }
+        searchParams.setParams(query.getParams());
 
-        // 查询数据
-        List<ModbusData> list = modbusDataService.selectModbusDataList(params);
+        List<ModbusData> list = modbusDataService.selectModbusDataList(searchParams);
 
-        // 返回自定义格式
         return getDataTable(list);
     }
 }

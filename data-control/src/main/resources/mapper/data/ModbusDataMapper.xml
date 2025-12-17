@@ -39,16 +39,15 @@
     <select id="selectModbusDataList" parameterType="com.ruoyi.datacontrol.domain.ModbusData" resultMap="ModbusDataResultMap">
         <include refid="selectModbusDataVo"/>
         <where>
-            <if test="slaveId != null">
-                AND t1.slave_id = #{slaveId}
-            </if>
             <if test="deviceId != null and deviceId != ''">
                 AND t1.device_id = #{deviceId}
             </if>
-            <if test="params.startTime != null">
-                AND t1.read_time &gt;= #{params.startTime}
+
+            <if test="params.beginTime != null and params.beginTime != ''">
+                AND t1.read_time &gt;= #{params.beginTime}
             </if>
-            <if test="params.endTime != null">
+
+            <if test="params.endTime != null and params.endTime != ''">
                 AND t1.read_time &lt;= #{params.endTime}
             </if>
         </where>
