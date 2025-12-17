@@ -1,6 +1,6 @@
-package com.ruoyi.system.mapper;
+package com.ruoyi.datacontrol.mapper;
 
-import com.ruoyi.system.domain.DeviceArchive;
+import com.ruoyi.datacontrol.domain.DeviceArchive;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 

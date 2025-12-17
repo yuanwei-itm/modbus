@@ -1,4 +1,4 @@
-package com.ruoyi.system.constants;
+package com.ruoyi.datacontrol.constants;
 
 /**
  * Redis键名常量

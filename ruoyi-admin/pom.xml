@@ -55,6 +55,15 @@
             <artifactId>ruoyi-generator</artifactId>
         </dependency>
 
+        <!-- 数据权限控制-->
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>data-control</artifactId>
+            <version>${ruoyi.version}</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>

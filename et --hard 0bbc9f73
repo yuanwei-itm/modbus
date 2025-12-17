@@ -1,0 +1,109 @@
+[33mee466801[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to ee466801469b18fbeaed7ef94c004e53b2287100
+[33m0bbc9f73[m HEAD@{1}: reset: moving to 0bbc9f73f4466eab794ef7df833cf9582ec28337
+[33me3671366[m HEAD@{2}: revert: Revert "refactor: 重构数据控制模块包结构"
+[33m0bbc9f73[m HEAD@{3}: commit: refactor: 重构数据控制模块包结构
+[33mee466801[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{4}: checkout: moving from smart-doc to master
+[33mdd86861e[m HEAD@{5}: commit: 添加Swagger注解以增强API文档，导入到apifox做简单修改就可以进行调试
+[33m09b4ad76[m HEAD@{6}: commit: 更新Swagger配置，添加API文档注释
+[33m3bf7ea99[m HEAD@{7}: commit: 通过模拟数据示例增强文档，优化代码注释，把文档部分给提出git控制
+[33mc71a69be[m HEAD@{8}: commit: 更新完idea测试代码跑通
+[33m05c3bd4b[m HEAD@{9}: commit (merge): Merge branch 'master' of https://github.com/yuanwei-itm/modbus into smart-doc
+[33m2bc958cd[m HEAD@{10}: commit: 更新文档生成器，修复样式和脚本链接，优化页面加载性能
+[33md07a2d22[m HEAD@{11}: checkout: moving from smart-doc to smart-doc
+[33md07a2d22[m HEAD@{12}: commit: 添加smart-doc服务，修改部分代码以此实现文档内容正确
+[33mcb5ef428[m HEAD@{13}: reset: moving to cb5ef4281de26cd534db67950e73df185021eaf4
+[33me8d9537c[m HEAD@{14}: checkout: moving from feat/device to smart-doc
+[33me8d9537c[m HEAD@{15}: commit: 添加smart-doc服务，修改部分代码以此实现文档内容正确
+[33mcb5ef428[m HEAD@{16}: reset: moving to cb5ef4281de26cd534db67950e73df185021eaf4
+[33mfb8a3eb5[m HEAD@{17}: commit: 重构历史数据查询，添加ModbusQuery参数对象，优化数据查询逻辑，更新实时数据控制器返回格式
+[33mcb5ef428[m HEAD@{18}: commit: 移除冗余分页方法，改用ruiyi统一的数据返回格式
+[33m0d78d3f6[m HEAD@{19}: commit: 重构历史数据查询，添加分页支持和自定义返回格式，优化数据查询逻辑
+[33md2df3462[m HEAD@{20}: commit: 历史数据查找添加了device_id
+[33mc86efe42[m HEAD@{21}: commit: 引入动态计算起始地址startaddress，删除了冗余变量offset，使数据库维护更简单
+[33mc9c3a2bd[m HEAD@{22}: commit: 动态计算起始地址，动态计算相对偏移量可以适应更复杂的情况
+[33ma481b511[m HEAD@{23}: commit: 实现了实时数据返回结果的格式规范，添加了防空指针崩溃
+[33m0d223729[m HEAD@{24}: commit: 添加了批量插入，防重校验，添加device_id，offset偏移量实现多从站，同一从站多设备的数据读取
+[33mfa3d40fe[m HEAD@{25}: commit: 添加了device_id进行查找排序，确保接口数据返回格式规范
+[33m58af5af0[m HEAD@{26}: commit: 删除冗余代码
+[33m4ecb827e[m HEAD@{27}: commit: 添加设备名称的查询返回，在同窗口，不同窗口的模拟下都可以清楚的看到具体设备的情况，但是同窗口，不同窗口同时模拟时历史数据返回结果排序效果不理想
+[33m3acfe02b[m HEAD@{28}: commit: 更改了历史数据返回的格式，符合接口定义，保持格式与公司格式一致
+[33m330ff258[m HEAD@{29}: commit: 解决了由于代码缺失redis数据不实时更新的问题，实现了主动更新redis缓存读取最新数据，修改了部分变量的类型和接口对应
+[33md742a9e9[m HEAD@{30}: merge origin/feat/device: Fast-forward
+[33m0878cd02[m HEAD@{31}: rebase (finish): returning to refs/heads/feat/device
+[33m0878cd02[m HEAD@{32}: rebase (start): checkout 0878cd02638518252c851fc5fed3b9781e8de8a0
+[33mdfd71dbb[m HEAD@{33}: rebase (finish): returning to refs/heads/feat/device
+[33mdfd71dbb[m HEAD@{34}: rebase (pick): 改为使用ruoyi自带的结果分页封装类
+[33m0878cd02[m HEAD@{35}: rebase (start): checkout 0878cd02638518252c851fc5fed3b9781e8de8a0
+[33ma04a761b[m HEAD@{36}: rebase (finish): returning to refs/heads/feat/device
+[33ma04a761b[m HEAD@{37}: rebase (pick): 改为使用ruoyi自带的结果分页封装类
+[33mdb99ed5b[m HEAD@{38}: rebase (reword): 删除了没用的部分
+[33ma439b5b3[m HEAD@{39}: rebase (reword): 新增多设备动态参数传入
+[33m0878cd02[m HEAD@{40}: rebase (start): checkout 0878cd02638518252c851fc5fed3b9781e8de8a0
+[33me4d056e9[m HEAD@{41}: reset: moving to HEAD
+[33me4d056e9[m HEAD@{42}: undo: commit: 添加了查询结果按设备id排序，能够同时显示所有设备的实时数据，删除了部分冗余代码
+[33md742a9e9[m HEAD@{43}: commit: 添加了查询结果按设备id排序，能够同时显示所有设备的实时数据，删除了部分冗余代码
+[33me4d056e9[m HEAD@{44}: commit: 改为使用ruoyi自带的结果分页封装类
+[33mc8ab1bc4[m HEAD@{45}: commit: 新增多设备动态参数传入
+[33m0878cd02[m HEAD@{46}: commit: 历史数据查询新增：设备ID参数
+[33m5fa687b8[m HEAD@{47}: commit: DeviceArchiveMapper实体
+[33mfb59fed1[m HEAD@{48}: commit: 新增DeviceArchiveMapper
+[33mdbd5859a[m HEAD@{49}: commit: 调用mapper插入单条数据
+[33m59e55934[m HEAD@{50}: commit: 新增：设备ID参数
+[33m8bfdb089[m HEAD@{51}: commit: 数据采集增加遍历设备采集
+[33m6618cc5d[m HEAD@{52}: commit: 新增设备状态，设备从站id查找
+[33mcd869ec7[m HEAD@{53}: commit: 新增slaveID查询！
+[33m1a5d7e05[m HEAD@{54}: commit: 1
+[33m58e4acd6[m HEAD@{55}: checkout: moving from master to feat/device
+[33m58e4acd6[m HEAD@{56}: commit: 1
+[33m26b8c838[m HEAD@{57}: commit: 新增单独实时数据类，确保api接口可读性
+[33m7d36e25f[m HEAD@{58}: commit: 新增主键回填，保证读到的实施数据id不为null
+[33me616ea8d[m HEAD@{59}: commit: 调用getLastesData接口
+[33md5ba4f49[m HEAD@{60}: commit: 调用查找接口
+[33m84266085[m HEAD@{61}: rebase (finish): returning to refs/heads/master
+[33m84266085[m HEAD@{62}: rebase (pick): redis缓存键名
+[33m9b797475[m HEAD@{63}: rebase (pick): 添加相关的依赖
+[33m521d90c0[m HEAD@{64}: rebase (pick): 最新数据获取的返回
+[33m337908d6[m HEAD@{65}: rebase (reword): redis数据查询具体方法实现
+[33m177864ff[m HEAD@{66}: rebase (reword): 获取最新数据接口实现
+[33m2f43e473[m HEAD@{67}: rebase (start): checkout 2f43e473401915398a0639abe513e0dbc59357db
+[33m69e7e5fc[m HEAD@{68}: reset: moving to HEAD
+[33m69e7e5fc[m HEAD@{69}: commit: redis缓存键名
+[33m29b6bc94[m HEAD@{70}: commit: 添加相关的依赖
+[33mf2c1a24e[m HEAD@{71}: commit: 最新数据获取的返回
+[33m875016ea[m HEAD@{72}: commit: 获取最新数据接口实现
+[33m2f43e473[m HEAD@{73}: commit: 删除了一段无关注解
+[33m55e5aee4[m HEAD@{74}: commit: 添加查询最新一条数据的sql语句
+[33mbc7582d6[m HEAD@{75}: pull: Merge made by the 'ort' strategy.
+[33mf40cf28b[m HEAD@{76}: commit (amend): 为了解决返回list为空，新增一个分页封装类，最后发现是因为apifox参数设定导致数据过滤查不到历史数据
+[33m5c0c548f[m HEAD@{77}: commit: 为了结绝返回list为空，新增一个分页封装类，最后发现是因为apifox参数设定导致数据过滤查不到历史数据
+[33mf0b73a5f[m HEAD@{78}: undo: commit: README修改
+[33mb1f0a79b[m HEAD@{79}: undo: discard: [efb1630b00c886ca2c7d4e9b4689c1f1f5873ba1]
+[33mb1f0a79b[m HEAD@{80}: discard: [efb1630b00c886ca2c7d4e9b4689c1f1f5873ba1]
+[33mb1f0a79b[m HEAD@{81}: commit: README修改
+[33mf0b73a5f[m HEAD@{82}: commit: 启动类添加@EnableScheduling开启定时任务
+[33me780ac0c[m HEAD@{83}: commit: 数据库连接修改
+[33m369f73c2[m HEAD@{84}: commit: 支持温湿度数据批量插入，支持按时间范围分页查询历史数据
+[33md5f3c778[m HEAD@{85}: pull --ff --recurse-submodules --progress origin: Merge made by the 'ort' strategy.
+[33mf831a2d1[m HEAD@{86}: discard: [d5fc59cb57ba0cbff8ad42a3fa37ccc48ec77682]
+[33mf831a2d1[m HEAD@{87}: commit: 数据转换工具类
+[33mecb0927e[m HEAD@{88}: commit: 新增SerialModbusUtils工具类以此实现jSerialComm实现Modbus RTU串口采集
+[33mc6becd1b[m HEAD@{89}: commit: 新增 lombok依赖
+[33m05809e91[m HEAD@{90}: commit: 历史数据接口Controller
+[33m01c5bd22[m HEAD@{91}: commit: ModbusData数据创建
+[33m587007ed[m HEAD@{92}: commit: modbus连接配置
+[33mf8f266e8[m HEAD@{93}: commit (amend): 新增IModbusDataService接口
+[33mad42a90c[m HEAD@{94}: undo: commit (amend): 新增ModbusDataMapper接口
+[33m24cb72f9[m HEAD@{95}: undo: commit: 创建ModbusData数据类型
+[33m04619f00[m HEAD@{96}: commit: 创建ModbusData数据类型
+[33m24cb72f9[m HEAD@{97}: undo: commit: 新增ModbusDataMapper接口
+[33m4c56d74b[m HEAD@{98}: commit: 新增ModbusDataMapper接口
+[33m24cb72f9[m HEAD@{99}: commit (amend): 新增ModbusDataMapper接口
+[33mad42a90c[m HEAD@{100}: commit: 新增ModbusDataMapper接口
+[33m0442a4db[m HEAD@{101}: commit: 新增ModbusDataServiceImpl
+[33m91adec0f[m HEAD@{102}: commit: 新增Modbus温湿度采集定时任务
+[33mb38e415f[m HEAD@{103}: commit (amend): 新增ModbusDataMapper.xml,批量插入+时间范围查询温湿度数据
+[33m94740645[m HEAD@{104}: commit: 新增 Modbus 温湿度采集定时任务
+[33m8a92c265[m HEAD@{105}: commit: 新增jSerialComm串口通信依赖，支持 Modbus RTU 数据读取
+[33ma5adee3c[m HEAD@{106}: undo: commit: ModbusDataMapper.xml
+[33me2f4a499[m HEAD@{107}: commit: ModbusDataMapper.xml
+[33ma5adee3c[m HEAD@{108}: clone: from https://gitee.com/y_project/RuoYi-Vue.git

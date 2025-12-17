@@ -1,6 +1,6 @@
-package com.ruoyi.system.service;
+package com.ruoyi.datacontrol.service;
 
-import com.ruoyi.system.domain.ModbusData;
+import com.ruoyi.datacontrol.domain.ModbusData;
 import java.util.Date;
 import java.util.List;
 

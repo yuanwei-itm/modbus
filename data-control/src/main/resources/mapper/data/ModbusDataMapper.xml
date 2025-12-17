@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.ruoyi.system.mapper.ModbusDataMapper">
+<mapper namespace="com.ruoyi.datacontrol.mapper.ModbusDataMapper">
     <!-- 结果集映射：数据库下划线→实体驼峰 -->
-    <resultMap id="ModbusDataResultMap" type="com.ruoyi.system.domain.ModbusData">
+    <resultMap id="ModbusDataResultMap" type="com.ruoyi.datacontrol.domain.ModbusData">
         <id column="id" property="id"/>
         <result column="slave_id" property="slaveId"/>
         <result column="device_id" property="deviceId"/>
@@ -36,7 +36,7 @@
     </insert>
 
     <!-- 历史数据查询SQL -->
-    <select id="selectModbusDataList" parameterType="com.ruoyi.system.domain.ModbusData" resultMap="ModbusDataResultMap">
+    <select id="selectModbusDataList" parameterType="com.ruoyi.datacontrol.domain.ModbusData" resultMap="ModbusDataResultMap">
         <include refid="selectModbusDataVo"/>
         <where>
             <if test="slaveId != null">

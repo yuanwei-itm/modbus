@@ -1,10 +1,10 @@
-package com.ruoyi.system.service.impl;
+package com.ruoyi.datacontrol.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.ruoyi.system.constants.RedisKeyConstants;
-import com.ruoyi.system.domain.ModbusData;
-import com.ruoyi.system.mapper.ModbusDataMapper;
-import com.ruoyi.system.service.IModbusDataService;
+import com.ruoyi.datacontrol.constants.RedisKeyConstants;
+import com.ruoyi.datacontrol.domain.ModbusData;
+import com.ruoyi.datacontrol.mapper.ModbusDataMapper;
+import com.ruoyi.datacontrol.service.IModbusDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
