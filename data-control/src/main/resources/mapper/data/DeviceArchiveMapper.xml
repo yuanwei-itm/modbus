@@ -3,25 +3,42 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- 命名空间必须和Mapper接口全路径一致 -->
 <mapper namespace="com.ruoyi.datacontrol.mapper.DeviceArchiveMapper">
 
-    <!-- 查询所有启用的设备（对应你的表数据） -->
-    <select id="selectEnabledDevices" resultType="com.ruoyi.datacontrol.domain.DeviceArchive">
-        SELECT
-            device_id     AS deviceId,
-            device_name   AS deviceName,
-            comm_address  AS commAddress,
-            slave_id      AS slaveId,
-            status,
-            reg_count     AS regCount
+    <resultMap type="com.ruoyi.datacontrol.domain.DeviceArchive" id="DeviceArchiveResult">
+        <result property="deviceId"     column="device_id"    />
+        <result property="deviceName"   column="device_name"  />
+        <result property="commAddress"  column="comm_address" />
+        <result property="slaveId"      column="slave_id"     />
+        <result property="status"       column="status"       />
+        <result property="regCount"     column="reg_count"    />
+    </resultMap>
 
-        FROM
-            device_archive
-        WHERE
-            status = '0'
-        ORDER BY
-            slave_id ASC
+    <sql id="selectDeviceArchiveVo">
+        SELECT device_id, device_name, comm_address, slave_id, status, reg_count
+        FROM device_archive
+    </sql>
+
+    <select id="selectDeviceArchiveList" parameterType="com.ruoyi.datacontrol.domain.DeviceArchive" resultMap="DeviceArchiveResult">
+        <include refid="selectDeviceArchiveVo"/>
+        <where>
+            <if test="deviceName != null and deviceName != ''">
+                AND device_name like concat('%', #{deviceName}, '%')
+            </if>
+            <if test="deviceId != null and deviceId != ''">
+                AND device_id = #{deviceId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY device_id ASC
+    </select>
+
+    <select id="selectEnabledDevices" resultMap="DeviceArchiveResult">
+        <include refid="selectDeviceArchiveVo"/>
+        WHERE status = '0'
+        ORDER BY slave_id ASC
     </select>
 
 </mapper>
